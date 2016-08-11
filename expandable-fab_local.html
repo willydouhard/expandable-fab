@@ -3,10 +3,10 @@
 <link rel="import" href="bower_components/iron-icons/iron-icons.html">
 
 <dom-module id="expandable-fab">
-  <template>
-    <style>
+      <template>
+      <style>
       :host {
-        display: block;
+            display: block;
       }
 
       #container {
@@ -49,22 +49,22 @@
             box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
       }
 
-    </style>
+      </style>
 
-    <div id="container">
-          <paper-fab id="fab" icon="add" noink on-tap="toDrawer"></paper-fab>
-          <div id="drawer">
-                <div id="placeholder"></div>
-                <div id="drawerContent">
-                      <content></content>
-                </div>
-          </div>
+      <div id="container">
+            <paper-fab id="fab" icon="add" noink on-tap="toDrawer"></paper-fab>
+            <div id="drawer">
+                  <div id="placeholder"></div>
+                  <div id="drawerContent">
+                        <content></content>
+                  </div>
+            </div>
 
-    </div>
-  </template>
+      </div>
+</template>
 
-  <script>
-    Polymer({
+<script>
+Polymer({
 
       is: 'expandable-fab',
 
@@ -93,41 +93,41 @@
             drawerAnimationSettings: {
                   type: Object,
                   value: {
-                    duration: 250, //milliseconds
-                    easing: 'ease-in-out', //'linear', a bezier curve, etc.
-                    delay: 0, //milliseconds
-                    iterations: 1, //or a number
-                    direction: 'normal', //'normal', 'reverse', etc.
-                    fill: 'forwards' //'backwards', 'both', 'none', 'auto'
-              }
-        },
-        fabAnimationSettings: {
-             type: Object,
-             value: {
-                duration: 150, //milliseconds
-                easing: 'linear', //'linear', a bezier curve, etc.
-                delay: 0, //milliseconds
-                iterations: 1, //or a number
-                direction: 'normal', //'normal', 'reverse', etc.
-                fill: 'forwards' //'backwards', 'both', 'none', 'auto'
-          }
-    },
-    fabScale: {
-          type: Number,
-          value: 1.2
-   },
-   fabPlayer: {
-         type: Object,
-         value: null
-   },
-   ripplePlayer: {
-         type: Object,
-         value: null
-   },
-   contentPlayer: {
-         type: Object,
-         value: null
-   }
+                        duration: 250, //milliseconds
+                        easing: 'ease-in-out', //'linear', a bezier curve, etc.
+                        delay: 0, //milliseconds
+                        iterations: 1, //or a number
+                        direction: 'normal', //'normal', 'reverse', etc.
+                        fill: 'forwards' //'backwards', 'both', 'none', 'auto'
+                  }
+            },
+            fabAnimationSettings: {
+                  type: Object,
+                  value: {
+                        duration: 150, //milliseconds
+                        easing: 'linear', //'linear', a bezier curve, etc.
+                        delay: 0, //milliseconds
+                        iterations: 1, //or a number
+                        direction: 'normal', //'normal', 'reverse', etc.
+                        fill: 'forwards' //'backwards', 'both', 'none', 'auto'
+                  }
+            },
+            fabScale: {
+                  type: Number,
+                  value: 1.2
+            },
+            fabPlayer: {
+                  type: Object,
+                  value: null
+            },
+            ripplePlayer: {
+                  type: Object,
+                  value: null
+            },
+            contentPlayer: {
+                  type: Object,
+                  value: null
+            }
       },
 
       toDrawer: function(){
@@ -169,25 +169,25 @@
                   if(_this.state === _this.ANIMATING_STATE || _this.state === _this.FAB_STATE) return reject(new Error('Cannot display fab now'));
                   _this.state = _this.ANIMATING_STATE;
 
-                        _this._fadeOutContent(_this.contentPlayer)
-                        .then(function(){
-                              _this.contentPlayer = null;
-                              _this.$.placeholder.style.display = 'block';
-                              _this.$.drawer.style.boxShadow = 'none';
-                              _this.$.drawer.style.backgroundColor = 'rgba(0,0,0,0)';
-                              requestAnimationFrame(function(){
-                                    _this._rippleOut(_this.ripplePlayer)
+                  _this._fadeOutContent(_this.contentPlayer)
+                  .then(function(){
+                        _this.contentPlayer = null;
+                        _this.$.placeholder.style.display = 'block';
+                        _this.$.drawer.style.boxShadow = 'none';
+                        _this.$.drawer.style.backgroundColor = 'rgba(0,0,0,0)';
+                        requestAnimationFrame(function(){
+                              _this._rippleOut(_this.ripplePlayer)
+                              .then(function(){
+                                    _this.ripplePlayer = null;
+                                    _this._translateOutFab(_this.fabPlayer)
                                     .then(function(){
-                                          _this.ripplePlayer = null;
-                                          _this._translateOutFab(_this.fabPlayer)
-                                          .then(function(){
-                                                _this.fabPlayer = null;
-                                                _this.$.drawer.style.display = 'none';
-                                                _this.state = _this.FAB_STATE;
-                                                return resolve();
-                                          })
+                                          _this.fabPlayer = null;
+                                          _this.$.drawer.style.display = 'none';
+                                          _this.state = _this.FAB_STATE;
+                                          return resolve();
                                     })
                               })
+                        })
                   })
             })
 
@@ -220,13 +220,13 @@
                   child.style.opacity = '0';
 
                   var settings = {
-                     duration: 200,
-                     easing: 'ease',
-                     delay: 0,
-                     iterations: 1,
-                     direction: 'normal',
-                     fill: window.chrome ? 'forwards' : 'both'
-               };
+                        duration: 200,
+                        easing: 'ease',
+                        delay: 0,
+                        iterations: 1,
+                        direction: 'normal',
+                        fill: window.chrome ? 'forwards' : 'both'
+                  };
 
                   if(childrenPerRow !== null){
                         var row = Math.ceil((index + 1)/childrenPerRow);
@@ -250,9 +250,9 @@
             return new Promise(function(resolve, reject){
 
                   var player = document.timeline.play(group);
-               player.onfinish = function(){
-                     return resolve(player);
-            }
+                  player.onfinish = function(){
+                        return resolve(player);
+                  }
 
             });
 
@@ -268,7 +268,7 @@
 
                   contentPlayer.onfinish = resolve;
 
-      })
+            })
 
       },
 
@@ -277,86 +277,86 @@
             var _this = this;
 
             return new Promise(function(resolve, reject){
-                        var translateX = ( placeholderBcr.top - fabBcr.top ) * _this.fabScale;
-                        var translateY = ( placeholderBcr.left - fabBcr.left ) * _this.fabScale;
+                  var translateX = ( placeholderBcr.top - fabBcr.top ) * _this.fabScale;
+                  var translateY = ( placeholderBcr.left - fabBcr.left ) * _this.fabScale;
 
-                        var translateEffect = [
-                              { transform: 'none', offset: 0 },
-                              { transform: 'translate('+translateX+'px, '+translateY+'px) scale('+_this.fabScale+')', offset: 1 }
-                        ];
-                        var opacityEffect = [
-                              { opacity: 1, offset: 0 },
-                              { opacity: 0, offset: 1 }
-                        ]
-                        var kEffects = [
-  new KeyframeEffect(_this.$.fab, translateEffect, _this.fabAnimationSettings),
-  new KeyframeEffect(_this.$.fab.$.icon, opacityEffect, _this.fabAnimationSettings)
-];
-var group = new GroupEffect(kEffects);
+                  var translateEffect = [
+                        { transform: 'none', offset: 0 },
+                        { transform: 'translate('+translateX+'px, '+translateY+'px) scale('+_this.fabScale+')', offset: 1 }
+                  ];
+                  var opacityEffect = [
+                        { opacity: 1, offset: 0 },
+                        { opacity: 0, offset: 1 }
+                  ]
+                  var kEffects = [
+                        new KeyframeEffect(_this.$.fab, translateEffect, _this.fabAnimationSettings),
+                        new KeyframeEffect(_this.$.fab.$.icon, opacityEffect, _this.fabAnimationSettings)
+                  ];
+                  var group = new GroupEffect(kEffects);
 
-                        var player = document.timeline.play(group);
-                     player.onfinish = function(){
-                           _this.$.fab.style.opacity = 0;
-                           _this.$.placeholder.style.opacity = 1;
-                           return resolve(player);
+                  var player = document.timeline.play(group);
+                  player.onfinish = function(){
+                        _this.$.fab.style.opacity = 0;
+                        _this.$.placeholder.style.opacity = 1;
+                        return resolve(player);
                   }
 
-      })
-},
+            })
+      },
 
-_rippleIn: function(placeholderBcr, drawerBcr, fabBcr){
-      var _this = this;
+      _rippleIn: function(placeholderBcr, drawerBcr, fabBcr){
+            var _this = this;
 
-      return new Promise(function(resolve, reject){
-            var diameter = Math.max(drawerBcr.height, drawerBcr.width) * 1.06;
-            var scaleRatio = diameter / fabBcr.width;
-            var fabHalfWidth = fabBcr.width * _this.fabScale / 2;
-            var translateX = ( (drawerBcr.left + drawerBcr.width / 2 - fabHalfWidth) - placeholderBcr.left ) / scaleRatio;
-            var translateY = ( (drawerBcr.top + drawerBcr.height / 2 - fabHalfWidth) - placeholderBcr.top ) / scaleRatio;
-            var player = _this.$.placeholder.animate([
-               { transform: 'none', offset: 0 },
-               { transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)', offset: 1 }
-         ], _this.drawerAnimationSettings);
-         player.onfinish = function(){
-               _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
-               _this.$.drawer.style.backgroundColor = '#ff4081';
-               _this.$.placeholder.style.display = 'none';
-               return resolve(player);
-         };
+            return new Promise(function(resolve, reject){
+                  var diameter = Math.max(drawerBcr.height, drawerBcr.width) * 1.06;
+                  var scaleRatio = diameter / fabBcr.width;
+                  var fabHalfWidth = fabBcr.width * _this.fabScale / 2;
+                  var translateX = ( (drawerBcr.left + drawerBcr.width / 2 - fabHalfWidth) - placeholderBcr.left ) / scaleRatio;
+                  var translateY = ( (drawerBcr.top + drawerBcr.height / 2 - fabHalfWidth) - placeholderBcr.top ) / scaleRatio;
+                  var player = _this.$.placeholder.animate([
+                        { transform: 'none', offset: 0 },
+                        { transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)', offset: 1 }
+                  ], _this.drawerAnimationSettings);
+                  player.onfinish = function(){
+                        _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
+                        _this.$.drawer.style.backgroundColor = '#ff4081';
+                        _this.$.placeholder.style.display = 'none';
+                        return resolve(player);
+                  };
 
-})
-},
+            })
+      },
 
-_rippleOut: function(ripplePlayer){
-      var _this = this;
+      _rippleOut: function(ripplePlayer){
+            var _this = this;
 
-      return new Promise(function(resolve, reject){
+            return new Promise(function(resolve, reject){
 
-            ripplePlayer.reverse();
+                  ripplePlayer.reverse();
 
-            ripplePlayer.onfinish = function(){
-                  _this.$.placeholder.style.opacity = 0;
-                  _this.$.fab.style.opacity = 1;
-                  return resolve();
-            }
+                  ripplePlayer.onfinish = function(){
+                        _this.$.placeholder.style.opacity = 0;
+                        _this.$.fab.style.opacity = 1;
+                        return resolve();
+                  }
 
-})
-}
-,
-_translateOutFab: function(fabPlayer){
-      var _this = this;
+            })
+      }
+      ,
+      _translateOutFab: function(fabPlayer){
+            var _this = this;
 
-      return new Promise(function(resolve, reject){
+            return new Promise(function(resolve, reject){
 
-            fabPlayer.reverse();
+                  fabPlayer.reverse();
 
-            fabPlayer.onfinish = function(){
-                  return resolve();
-            }
+                  fabPlayer.onfinish = function(){
+                        return resolve();
+                  }
 
-})
-}
+            })
+      }
 
-    });
-  </script>
+});
+</script>
 </dom-module>
