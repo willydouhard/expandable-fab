@@ -1,0 +1,362 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="expandable-fab">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #container {
+            position: relative;
+      }
+
+      #fab {
+            will-change: transform;
+      }
+
+      #drawer {
+            height:250px;
+            width: 200px;
+            background-color: rgba(0, 0 ,0 , 0);
+            border-radius: 2px;
+            position: absolute;
+            top: 23px;
+            left: 23px;
+            overflow: hidden;
+            display: none;
+      }
+
+      #drawerContent {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            flex-wrap: wrap;
+            box-sizing: border-box;
+      }
+
+      #placeholder {
+            opacity: 0;
+            position: absolute;
+            will-change: transform;
+            border-radius: 50%;
+            background-color: #ff4081;
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+      }
+
+    </style>
+
+    <div id="container">
+          <paper-fab id="fab" icon="add" noink on-tap="toDrawer"></paper-fab>
+          <div id="drawer">
+                <div id="placeholder"></div>
+                <div id="drawerContent">
+                      <content></content>
+                </div>
+          </div>
+
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'expandable-fab',
+
+      listeners: {
+            'tap': 'toFab'
+      },
+
+      properties: {
+
+            DRAWER_STATE: {
+                  type: String,
+                  value: 'drawer'
+            },
+            FAB_STATE: {
+                  type: String,
+                  value: 'fab'
+            },
+            ANIMATING_STATE: {
+                  type: String,
+                  value: 'animating'
+            },
+            state: {
+                  type: String,
+                  value: this.FAB_STATE
+            },
+            drawerAnimationSettings: {
+                  type: Object,
+                  value: {
+                    duration: 250, //milliseconds
+                    easing: 'ease-in-out', //'linear', a bezier curve, etc.
+                    delay: 0, //milliseconds
+                    iterations: 1, //or a number
+                    direction: 'normal', //'normal', 'reverse', etc.
+                    fill: 'forwards' //'backwards', 'both', 'none', 'auto'
+              }
+        },
+        fabAnimationSettings: {
+             type: Object,
+             value: {
+                duration: 150, //milliseconds
+                easing: 'linear', //'linear', a bezier curve, etc.
+                delay: 0, //milliseconds
+                iterations: 1, //or a number
+                direction: 'normal', //'normal', 'reverse', etc.
+                fill: 'forwards' //'backwards', 'both', 'none', 'auto'
+          }
+    },
+    fabScale: {
+          type: Number,
+          value: 1.2
+   },
+   fabPlayer: {
+         type: Object,
+         value: null
+   },
+   ripplePlayer: {
+         type: Object,
+         value: null
+   },
+   contentPlayer: {
+         type: Object,
+         value: null
+   }
+      },
+
+      toDrawer: function(){
+            var _this = this;
+            return new Promise(function(resolve, reject){
+                  if(_this.state === _this.ANIMATING_STATE || _this.state === _this.DRAWER_STATE) return reject(new Error('Cannot display drawer now'));
+                  _this.state = _this.ANIMATING_STATE;
+                  _this.$.drawer.style.display = 'block';
+                  var placeholderBcr = _this.$.placeholder.getBoundingClientRect();
+                  var fabBcr = _this.$.fab.getBoundingClientRect();
+                  var drawerBcr = _this.$.drawer.getBoundingClientRect();
+                  var contentGroupEffect = _this._computeContentFadeInEffects(drawerBcr);
+                  _this.$.placeholder.style.height = (fabBcr.height * _this.fabScale)+'px';
+                  _this.$.placeholder.style.width = (fabBcr.width * _this.fabScale)+'px';
+
+                  requestAnimationFrame(function(){
+                        _this._translateInFab(placeholderBcr, fabBcr)
+                        .then(function(fabPlayer){
+                              _this.fabPlayer = fabPlayer;
+                              _this._rippleIn(placeholderBcr, drawerBcr, fabBcr)
+                              .then(function(ripplePlayer){
+                                    _this.ripplePlayer = ripplePlayer;
+                                    _this._fadeInContent(contentGroupEffect)
+                                    .then(function(contentPlayer){
+                                          _this.contentPlayer = contentPlayer;
+                                          _this.state = _this.DRAWER_STATE;
+                                          return resolve();
+                                    })
+                              })
+                        })
+                  })
+            })
+
+      },
+
+      toFab: function(){
+            var _this = this;
+            return new Promise(function(resolve, reject){
+                  if(_this.state === _this.ANIMATING_STATE || _this.state === _this.FAB_STATE) return reject(new Error('Cannot display fab now'));
+                  _this.state = _this.ANIMATING_STATE;
+
+                        _this._fadeOutContent(_this.contentPlayer)
+                        .then(function(){
+                              _this.contentPlayer = null;
+                              _this.$.placeholder.style.display = 'block';
+                              _this.$.drawer.style.boxShadow = 'none';
+                              _this.$.drawer.style.backgroundColor = 'rgba(0,0,0,0)';
+                              requestAnimationFrame(function(){
+                                    _this._rippleOut(_this.ripplePlayer)
+                                    .then(function(){
+                                          _this.ripplePlayer = null;
+                                          _this._translateOutFab(_this.fabPlayer)
+                                          .then(function(){
+                                                _this.fabPlayer = null;
+                                                _this.$.drawer.style.display = 'none';
+                                                _this.state = _this.FAB_STATE;
+                                                return resolve();
+                                          })
+                                    })
+                              })
+                  })
+            })
+
+      },
+
+      _computeContentFadeInEffects: function(drawerBcr){
+
+            var childrenPerRow = null;
+            var childrenShareWidth = true;
+            var previousChildWidth = null;
+            var delay = 50;
+
+            var keyframe = [
+                  { opacity: 0, transform: 'translate(-20px, -20px) scale(0.8)', offset: 0 },
+                  { transform: 'none', opacity: 1, offset: 1 }
+            ];
+
+            var effects = [];
+
+            Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
+                  var width = child.width || child.style.width;
+                  if(previousChildWidth === null) previousChildWidth = width;
+                  else if(previousChildWidth !== width) childrenShareWidth = false;
+            });
+
+            if(childrenShareWidth) childrenPerRow = (drawerBcr.width - 20) / previousChildWidth;
+
+            Array.prototype.forEach.call(this.$.drawerContent.children, function(child, index){
+
+                  child.style.opacity = '0';
+
+                  var settings = {
+                     duration: 200,
+                     easing: 'ease',
+                     delay: 0,
+                     iterations: 1,
+                     direction: 'normal',
+                     fill: window.chrome ? 'forwards' : 'both'
+               };
+
+                  if(childrenPerRow !== null){
+                        var row = Math.ceil((index + 1)/childrenPerRow);
+                        var col = (index < childrenPerRow - 1) ? index : index - row;
+                        settings.delay = (row + col) * delay;
+                  }
+
+                  effects.push(new KeyframeEffect(child, keyframe, settings));
+
+            });
+
+            return new GroupEffect(effects);
+
+
+      },
+
+      _fadeInContent: function(group){
+
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+
+                  var player = document.timeline.play(group);
+               player.onfinish = function(){
+                     return resolve(player);
+            }
+
+            });
+
+      },
+
+      _fadeOutContent: function(contentPlayer){
+
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+
+                  contentPlayer.reverse();
+
+                  contentPlayer.onfinish = resolve;
+
+      })
+
+      },
+
+      _translateInFab: function(placeholderBcr, fabBcr){
+
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+                        var translateX = ( placeholderBcr.top - fabBcr.top ) * _this.fabScale;
+                        var translateY = ( placeholderBcr.left - fabBcr.left ) * _this.fabScale;
+
+                        var translateEffect = [
+                              { transform: 'none', offset: 0 },
+                              { transform: 'translate('+translateX+'px, '+translateY+'px) scale('+_this.fabScale+')', offset: 1 }
+                        ];
+                        var opacityEffect = [
+                              { opacity: 1, offset: 0 },
+                              { opacity: 0, offset: 1 }
+                        ]
+                        var kEffects = [
+  new KeyframeEffect(_this.$.fab, translateEffect, _this.fabAnimationSettings),
+  new KeyframeEffect(_this.$.fab.$.icon, opacityEffect, _this.fabAnimationSettings)
+];
+var group = new GroupEffect(kEffects);
+
+                        var player = document.timeline.play(group);
+                     player.onfinish = function(){
+                           _this.$.fab.style.opacity = 0;
+                           _this.$.placeholder.style.opacity = 1;
+                           return resolve(player);
+                  }
+
+      })
+},
+
+_rippleIn: function(placeholderBcr, drawerBcr, fabBcr){
+      var _this = this;
+
+      return new Promise(function(resolve, reject){
+            var diameter = Math.max(drawerBcr.height, drawerBcr.width) * 1.06;
+            var scaleRatio = diameter / fabBcr.width;
+            var fabHalfWidth = fabBcr.width * _this.fabScale / 2;
+            var translateX = ( (drawerBcr.left + drawerBcr.width / 2 - fabHalfWidth) - placeholderBcr.left ) / scaleRatio;
+            var translateY = ( (drawerBcr.top + drawerBcr.height / 2 - fabHalfWidth) - placeholderBcr.top ) / scaleRatio;
+            var player = _this.$.placeholder.animate([
+               { transform: 'none', offset: 0 },
+               { transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)', offset: 1 }
+         ], _this.drawerAnimationSettings);
+         player.onfinish = function(){
+               _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
+               _this.$.drawer.style.backgroundColor = '#ff4081';
+               _this.$.placeholder.style.display = 'none';
+               return resolve(player);
+         };
+
+})
+},
+
+_rippleOut: function(ripplePlayer){
+      var _this = this;
+
+      return new Promise(function(resolve, reject){
+
+            ripplePlayer.reverse();
+
+            ripplePlayer.onfinish = function(){
+                  _this.$.placeholder.style.opacity = 0;
+                  _this.$.fab.style.opacity = 1;
+                  return resolve();
+            }
+
+})
+}
+,
+_translateOutFab: function(fabPlayer){
+      var _this = this;
+
+      return new Promise(function(resolve, reject){
+
+            fabPlayer.reverse();
+
+            fabPlayer.onfinish = function(){
+                  return resolve();
+            }
+
+})
+}
+
+    });
+  </script>
+</dom-module>
