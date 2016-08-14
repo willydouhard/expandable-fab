@@ -23,8 +23,7 @@
             background-color: rgba(0, 0 ,0 , 0);
             border-radius: 2px;
             position: absolute;
-            top: 23px;
-            left: 23px;
+            z-index: 10;
             overflow: hidden;
             display: none;
       }
@@ -52,14 +51,13 @@
       </style>
 
       <div id="container">
-            <paper-fab id="fab" icon="add" noink on-tap="toDrawer"></paper-fab>
             <div id="drawer">
                   <div id="placeholder"></div>
                   <div id="drawerContent">
                         <content></content>
                   </div>
             </div>
-
+            <paper-fab id="fab" icon="[[fabIcon]]" noink on-tap="toDrawer"></paper-fab>
       </div>
 </template>
 
@@ -73,6 +71,36 @@ Polymer({
       },
 
       properties: {
+
+            orientation: {
+                  type: String,
+                  value: 'right'
+            },
+
+            drawerHeight: {
+                  type: Number,
+                  value: 250
+            },
+
+            drawerWidth: {
+                  type: Number,
+                  value: 200
+            },
+
+            fabIcon: {
+                  type: String,
+                  value: 'add'
+            },
+
+            fabDiameter: {
+                  type: Number,
+                  value: 56
+            },
+
+            fabTranslation: {
+                  type: Object,
+                  value: {x: 0, y: 0}
+            },
 
             DRAWER_STATE: {
                   type: String,
@@ -129,6 +157,78 @@ Polymer({
                   value: null
             }
       },
+      attached: function(){
+            this._setupGeometry();
+            this._setupOrientation();
+      },
+
+      _setupGeometry: function(){
+            this.$.drawer.style.height = this.drawerHeight+'px';
+            this.$.drawer.style.width = this.drawerWidth+'px';
+            this.$.fab.style.height = this.fabDiameter+'px';
+            this.$.fab.style.width = this.fabDiameter+'px';
+            this.$.placeholder.style.height = (this.fabDiameter * this.fabScale)+'px';
+            this.$.placeholder.style.width = (this.fabDiameter * this.fabScale)+'px';
+      },
+
+      _setupOrientation: function(){
+
+            var _this = this;
+            var splitted = this.orientation.split('-');
+
+            splitted.forEach(function(direction){
+                  switch(direction){
+                        case 'top':
+                              _this.$.drawer.style.top = '-'+(_this.drawerHeight - _this.fabDiameter / 2)+'px';
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.top = '100%';
+                              _this.$.placeholder.style.left = '50%';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+(scaledDiameter / 2)+'px';
+                              _this.fabTranslation.y = _this.fabDiameter / 2 * -1;
+                        break;
+                        case 'bottom':
+                              _this.$.drawer.style.top = (_this.fabDiameter / 2)+'px';
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.top = scaledDiameter+'px';
+                              _this.$.placeholder.style.left = '50%';
+                              _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+(scaledDiameter / 2)+'px';
+                              _this.fabTranslation.y = _this.fabDiameter / 2;
+                        break;
+                        case 'left':
+                              _this.$.drawer.style.left = '-'+(_this.drawerWidth - _this.fabDiameter / 2)+'px';
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.left = '100%';
+                              _this.$.placeholder.style.margin = '-'+(scaledDiameter / 2)+'px 0 0 -'+scaledDiameter+'px';
+                              _this.fabTranslation.x = _this.fabDiameter / 2 * -1;
+                        break;
+                        case 'right':
+                              _this.$.drawer.style.left = (_this.fabDiameter / 2)+'px';
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.left = '0%';
+                              _this.$.placeholder.style.margin = '-'+(scaledDiameter / 2)+'px 0 0 0';
+                              _this.fabTranslation.x = _this.fabDiameter / 2;
+                        break;
+                        case 'center':
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.left = '50%';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale / 2;
+                              _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+scaledDiameter+'px';
+                        break;
+                        default:
+                              console.error('Cannot process direction '+direction);
+                        break;
+                  }
+            })
+
+      },
 
       toDrawer: function(){
             var _this = this;
@@ -140,11 +240,9 @@ Polymer({
                   var fabBcr = _this.$.fab.getBoundingClientRect();
                   var drawerBcr = _this.$.drawer.getBoundingClientRect();
                   var contentGroupEffect = _this._computeContentFadeInEffects(drawerBcr);
-                  _this.$.placeholder.style.height = (fabBcr.height * _this.fabScale)+'px';
-                  _this.$.placeholder.style.width = (fabBcr.width * _this.fabScale)+'px';
 
                   requestAnimationFrame(function(){
-                        _this._translateInFab(placeholderBcr, fabBcr)
+                        _this._translateInFab()
                         .then(function(fabPlayer){
                               _this.fabPlayer = fabPlayer;
                               _this._rippleIn(placeholderBcr, drawerBcr, fabBcr)
@@ -296,17 +394,15 @@ Polymer({
 
       },
 
-      _translateInFab: function(placeholderBcr, fabBcr){
+      _translateInFab: function(){
 
             var _this = this;
 
             return new Promise(function(resolve, reject){
-                  var translateX = ( placeholderBcr.top - fabBcr.top ) * _this.fabScale;
-                  var translateY = ( placeholderBcr.left - fabBcr.left ) * _this.fabScale;
 
                   var translateEffect = [
                         { transform: 'none', offset: 0 },
-                        { transform: 'translate('+translateX+'px, '+translateY+'px) scale('+_this.fabScale+')', offset: 1 }
+                        { transform: 'translate('+_this.fabTranslation.x+'px, '+_this.fabTranslation.y+'px) scale('+_this.fabScale+')', offset: 1 }
                   ];
                   var opacityEffect = [
                         { opacity: 1, offset: 0 },
