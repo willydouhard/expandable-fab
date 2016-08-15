@@ -37,6 +37,15 @@
             padding: 10px;
             flex-wrap: wrap;
             box-sizing: border-box;
+            overflow: hidden;
+      }
+
+      #drawerContent ::content .drawerIcon{
+            cursor: pointer;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            transition: transform .3s ease;
       }
 
       #placeholder {
@@ -44,7 +53,6 @@
             position: absolute;
             will-change: transform;
             border-radius: 50%;
-            background-color: #ff4081;
             box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
       }
 
@@ -66,15 +74,16 @@ Polymer({
 
       is: 'expandable-fab',
 
-      listeners: {
-            'tap': 'toFab'
-      },
-
       properties: {
+
+            backgroundColor: {
+                  type: String,
+                  value: '#E91E63'
+            },
 
             orientation: {
                   type: String,
-                  value: 'bottom-right'
+                  value: 'center'
             },
 
             drawerHeight: {
@@ -116,7 +125,7 @@ Polymer({
             },
             state: {
                   type: String,
-                  value: this.FAB_STATE
+                  value: 'fab'
             },
             drawerAnimationSettings: {
                   type: Object,
@@ -160,6 +169,25 @@ Polymer({
       attached: function(){
             this._setupGeometry();
             this._setupOrientation();
+            this._attachEvents();
+      },
+
+      _attachEvents: function(){
+            var _this = this;
+            Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
+                  child.classList.add('drawerIcon');
+                  child.addEventListener('click', function($event){
+                        _this.toFab();
+                  })
+            });
+            document.addEventListener('click', function($event){
+                  for(var i = 0; i < $event.path.length; i++){
+                        if($event.path[i] === _this){
+                              return false;
+                        }
+                  }
+                  return _this.toFab();
+            })
       },
 
       _setupGeometry: function(){
@@ -169,12 +197,16 @@ Polymer({
             this.$.fab.style.width = this.fabDiameter+'px';
             this.$.placeholder.style.height = (this.fabDiameter * this.fabScale)+'px';
             this.$.placeholder.style.width = (this.fabDiameter * this.fabScale)+'px';
+            this.$.placeholder.style.backgroundColor = this.backgroundColor;
+            this.$.fab.style.backgroundColor = this.backgroundColor;
       },
 
       _setupOrientation: function(){
 
             var _this = this;
             var splitted = this.orientation.split('-');
+
+            if(splitted.length > 2) return console.error(this.orientation+' is not valid, only two direction are allowed at max, eg: top-left');
 
             splitted.forEach(function(direction){
                   switch(direction){
@@ -262,6 +294,7 @@ Polymer({
                                     _this._fadeInContent(contentGroupEffect)
                                     .then(function(contentPlayer){
                                           _this.contentPlayer = contentPlayer;
+                                          _this.$.drawerContent.style.overflow = 'auto';
                                           _this.state = _this.DRAWER_STATE;
                                           return resolve();
                                     })
@@ -277,7 +310,7 @@ Polymer({
             return new Promise(function(resolve, reject){
                   if(_this.state === _this.ANIMATING_STATE || _this.state === _this.FAB_STATE) return reject(new Error('Cannot display fab now'));
                   _this.state = _this.ANIMATING_STATE;
-
+                  _this.$.drawerContent.style.overflow = 'hidden';
                   _this._fadeOutContent(_this.contentPlayer)
                   .then(function(){
                         _this.contentPlayer = null;
@@ -450,7 +483,7 @@ Polymer({
                   ], _this.drawerAnimationSettings);
                   player.onfinish = function(){
                         _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
-                        _this.$.drawer.style.backgroundColor = '#ff4081';
+                        _this.$.drawer.style.backgroundColor = _this.backgroundColor;
                         _this.$.placeholder.style.display = 'none';
                         return resolve(player);
                   };
