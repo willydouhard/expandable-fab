@@ -1,38 +1,42 @@
-# \<expandable-fab\>
+[![Build Status](https://travis-ci.org/willydouhard/expandable-fab.svg?branch=master)](https://travis-ci.org/willydouhard/expandable-fab)
 
-A paper fab that can expand to a drawer
+WARNING: This component is relying on the web animation api. The poly fill is in the component dependencies, so you just have to include it in your index.html file.
 
-## Install the Polymer-CLI
+Example:
 
-First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Then run `polymer serve` to serve your application locally.
-
-## Viewing Your Application
-
-```
-$ polymer serve
+```html
+<script src="bower_components/web-animations-js/web-animations-next-lite.min.js"></script>
 ```
 
-## Building Your Application
+`expandable-fab` is a paper-fab that can expand into a drawer (android like).
 
-```
-$ polymer build
-```
+Example:
 
-This will create a `build/` folder with `bundled/` and `unbundled/` sub-folders
-containing a bundled (Vulcanized) and unbundled builds, both run through HTML,
-CSS, and JS optimizers.
-
-You can serve the built versions by giving `polymer serve` a folder to serve
-from:
-
-```
-$ polymer serve build/bundled
-```
-
-## Running Tests
-
-```
-$ polymer test
+```html
+<expandable-fab
+drawer-height="300"
+drawer-width="200"
+background-color="red"
+orientation="top-left"
+fab-icon="add"
+fab-diameter="60">
+     <img class="item" src="icons/logo_docs_64px.png"/>
+     <img class="item" src="icons/logo_forms_64px.png"/>
+     <img class="item" src="icons/logo_gmail_64px.png"/>
+     <img class="item" src="icons/logo_google_plus_64px.png"/>
+     <img class="item" src="icons/logo_hangouts_64px.png"/>
+     <img class="item" src="icons/logo_slides_64px.png"/>
+</expandable-fab>
 ```
 
-Your application is already set up to be tested via [web-component-tester](https://github.com/Polymer/web-component-tester). Run `polymer test` to run your application's test suite locally.
+You can style the items you are passing with a css class. If you want to change the way your content is displayed when the drawer is open,
+use the --drawer-content-mixin to apply your rules. By default, the component is using flexbox
+
+### Styling
+The following custom properties and mixins are available for styling:
+
+| Custom property | Description | Default |
+| ----------------|-------------|---------- |
+| `--drawer-content-mixin` | Mixin applied to the drawer content | `{}` |
+
+@demo demo/index.html

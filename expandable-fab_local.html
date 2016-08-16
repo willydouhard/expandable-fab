@@ -3,6 +3,48 @@
 <link rel="import" href="bower_components/iron-icons/iron-icons.html">
 
 <dom-module id="expandable-fab">
+      <!--
+      WARNING: This component is relying on the web animation api. The poly fill is in the component dependencies, so you just have to include it in your index.html file.
+
+      Example:
+
+      ```html
+      <script src="bower_components/web-animations-js/web-animations-next-lite.min.js"></script>
+      ```
+
+      `expandable-fab` is a paper-fab that can expand into a drawer (android like).
+
+      Example:
+
+      ```html
+      <expandable-fab
+      drawer-height="300"
+      drawer-width="200"
+      background-color="red"
+      orientation="top-left"
+      fab-icon="add"
+      fab-diameter="60">
+           <img class="item" src="icons/logo_docs_64px.png"/>
+           <img class="item" src="icons/logo_forms_64px.png"/>
+           <img class="item" src="icons/logo_gmail_64px.png"/>
+           <img class="item" src="icons/logo_google_plus_64px.png"/>
+           <img class="item" src="icons/logo_hangouts_64px.png"/>
+           <img class="item" src="icons/logo_slides_64px.png"/>
+      </expandable-fab>
+      ```
+
+      You can style the items you are passing with a css class. If you want to change the way your content is displayed when the drawer is open,
+      use the --drawer-content-mixin to apply your rules. By default, the component is using flexbox
+
+      ### Styling
+      The following custom properties and mixins are available for styling:
+
+      | Custom property | Description | Default |
+      | ----------------|-------------|---------- |
+      | `--drawer-content-mixin` | Mixin applied to the drawer content | `{}` |
+
+      @demo demo/index.html
+      -->
       <template>
       <style>
       :host {
@@ -38,6 +80,7 @@
             flex-wrap: wrap;
             box-sizing: border-box;
             overflow: hidden;
+            @apply(--drawer-content-mixin);
       }
 
       #drawerContent ::content .drawerIcon{
@@ -106,28 +149,28 @@ Polymer({
                   value: 56
             },
 
-            fabTranslation: {
+            _fabTranslation: {
                   type: Object,
                   value: {x: 0, y: 0}
             },
 
-            DRAWER_STATE: {
+            _DRAWER_STATE: {
                   type: String,
                   value: 'drawer'
             },
-            FAB_STATE: {
+            _FAB_STATE: {
                   type: String,
                   value: 'fab'
             },
-            ANIMATING_STATE: {
+            _ANIMATING_STATE: {
                   type: String,
                   value: 'animating'
             },
-            state: {
+            _state: {
                   type: String,
                   value: 'fab'
             },
-            drawerAnimationSettings: {
+            _drawerAnimationSettings: {
                   type: Object,
                   value: {
                         duration: 250, //milliseconds
@@ -138,7 +181,7 @@ Polymer({
                         fill: 'forwards' //'backwards', 'both', 'none', 'auto'
                   }
             },
-            fabAnimationSettings: {
+            _fabAnimationSettings: {
                   type: Object,
                   value: {
                         duration: 150, //milliseconds
@@ -149,19 +192,19 @@ Polymer({
                         fill: 'forwards' //'backwards', 'both', 'none', 'auto'
                   }
             },
-            fabScale: {
+            _fabScale: {
                   type: Number,
                   value: 1.2
             },
-            fabPlayer: {
+            _fabPlayer: {
                   type: Object,
                   value: null
             },
-            ripplePlayer: {
+            _ripplePlayer: {
                   type: Object,
                   value: null
             },
-            contentPlayer: {
+            _contentPlayer: {
                   type: Object,
                   value: null
             }
@@ -169,15 +212,19 @@ Polymer({
       attached: function(){
             this._setupGeometry();
             this._setupOrientation();
-            this._attachEvents();
+            this._setupContent();
       },
 
-      _attachEvents: function(){
+      _setupContent: function(){
             var _this = this;
             Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
                   child.classList.add('drawerIcon');
-                  child.addEventListener('click', function($event){
+                  child.setAttribute('tabindex', -1);
+                  child.addEventListener('click', function(){
                         _this.toFab();
+                  })
+                  child.addEventListener('keydown', function($event){
+                        if($event.keyCode === 13) child.dispatchEvent(new Event('click'));
                   })
             });
             document.addEventListener('click', function($event){
@@ -195,8 +242,8 @@ Polymer({
             this.$.drawer.style.width = this.drawerWidth+'px';
             this.$.fab.style.height = this.fabDiameter+'px';
             this.$.fab.style.width = this.fabDiameter+'px';
-            this.$.placeholder.style.height = (this.fabDiameter * this.fabScale)+'px';
-            this.$.placeholder.style.width = (this.fabDiameter * this.fabScale)+'px';
+            this.$.placeholder.style.height = (this.fabDiameter * this._fabScale)+'px';
+            this.$.placeholder.style.width = (this.fabDiameter * this._fabScale)+'px';
             this.$.placeholder.style.backgroundColor = this.backgroundColor;
             this.$.fab.style.backgroundColor = this.backgroundColor;
       },
@@ -213,9 +260,9 @@ Polymer({
                         case 'top':
                               _this.$.drawer.style.top = '-'+(_this.drawerHeight - _this.fabDiameter / 2)+'px';
                               _this.$.placeholder.style.top = '100%';
-                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
                               _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px';
-                              _this.fabTranslation.y = _this.fabDiameter / 2 * -1;
+                              _this._fabTranslation.y = _this.fabDiameter / 2 * -1;
                               if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
                                     _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
                                     _this.$.placeholder.style.left = '50%';
@@ -224,10 +271,10 @@ Polymer({
                         break;
                         case 'bottom':
                               _this.$.drawer.style.top = (_this.fabDiameter / 2)+'px';
-                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
                               _this.$.placeholder.style.top = scaledDiameter+'px';
                               _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px'
-                              _this.fabTranslation.y = _this.fabDiameter / 2;
+                              _this._fabTranslation.y = _this.fabDiameter / 2;
                               if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
                                     _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
                                     _this.$.placeholder.style.left = '50%';
@@ -236,10 +283,10 @@ Polymer({
                         break;
                         case 'left':
                               _this.$.drawer.style.left = '-'+(_this.drawerWidth - _this.fabDiameter / 2)+'px';
-                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
                               _this.$.placeholder.style.left = '100%';
                               _this.$.placeholder.style.marginLeft =  '-'+scaledDiameter+'px';
-                              _this.fabTranslation.x = _this.fabDiameter / 2 * -1;
+                              _this._fabTranslation.x = _this.fabDiameter / 2 * -1;
                               if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
                                     _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
                                     _this.$.placeholder.style.top = '50%';
@@ -248,9 +295,9 @@ Polymer({
                         break;
                         case 'right':
                               _this.$.drawer.style.left = (_this.fabDiameter / 2)+'px';
-                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
                               _this.$.placeholder.style.left = '0%';
-                              _this.fabTranslation.x = _this.fabDiameter / 2;
+                              _this._fabTranslation.x = _this.fabDiameter / 2;
                               if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
                                     _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
                                     _this.$.placeholder.style.top = '50%';
@@ -262,7 +309,7 @@ Polymer({
                               _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
                               _this.$.placeholder.style.top = '50%';
                               _this.$.placeholder.style.left = '50%';
-                              var scaledDiameter = _this.fabDiameter * _this.fabScale / 2;
+                              var scaledDiameter = _this.fabDiameter * _this._fabScale / 2;
                               _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+scaledDiameter+'px';
                         break;
                         default:
@@ -273,11 +320,22 @@ Polymer({
 
       },
 
+      _setAccessibility: function(){
+            Array.prototype.forEach.call(this.$.drawerContent.children, function(child, index){
+                  if(this._state === this._DRAWER_STATE){
+                        child.setAttribute('tabindex', 0);
+                        if(index === 0) child.focus();
+                  } else if (this._state === this._FAB_STATE) {
+                        child.setAttribute('tabindex', -1);
+                  }
+            });
+      },
+
       toDrawer: function(){
             var _this = this;
             return new Promise(function(resolve, reject){
-                  if(_this.state === _this.ANIMATING_STATE || _this.state === _this.DRAWER_STATE) return reject(new Error('Cannot display drawer now'));
-                  _this.state = _this.ANIMATING_STATE;
+                  if(_this._state === _this._ANIMATING_STATE || _this.state === _this._DRAWER_STATE) return reject(new Error('Cannot display drawer now'));
+                  _this._state = _this._ANIMATING_STATE;
                   _this.$.drawer.style.display = 'block';
                   var placeholderBcr = _this.$.placeholder.getBoundingClientRect();
                   var fabBcr = _this.$.fab.getBoundingClientRect();
@@ -286,16 +344,17 @@ Polymer({
 
                   requestAnimationFrame(function(){
                         _this._translateInFab()
-                        .then(function(fabPlayer){
-                              _this.fabPlayer = fabPlayer;
+                        .then(function(_fabPlayer){
+                              _this._fabPlayer = _fabPlayer;
                               _this._rippleIn(placeholderBcr, drawerBcr, fabBcr)
-                              .then(function(ripplePlayer){
-                                    _this.ripplePlayer = ripplePlayer;
+                              .then(function(_ripplePlayer){
+                                    _this._ripplePlayer = _ripplePlayer;
                                     _this._fadeInContent(contentGroupEffect)
-                                    .then(function(contentPlayer){
-                                          _this.contentPlayer = contentPlayer;
+                                    .then(function(_contentPlayer){
+                                          _this._contentPlayer = _contentPlayer;
                                           _this.$.drawerContent.style.overflow = 'auto';
-                                          _this.state = _this.DRAWER_STATE;
+                                          _this._state = _this._DRAWER_STATE;
+                                          _this._setAccessibility();
                                           return resolve();
                                     })
                               })
@@ -308,24 +367,25 @@ Polymer({
       toFab: function(){
             var _this = this;
             return new Promise(function(resolve, reject){
-                  if(_this.state === _this.ANIMATING_STATE || _this.state === _this.FAB_STATE) return reject(new Error('Cannot display fab now'));
-                  _this.state = _this.ANIMATING_STATE;
+                  if(_this._state === _this._ANIMATING_STATE || _this._state === _this._FAB_STATE) return reject(new Error('Cannot display fab now'));
+                  _this._state = _this._ANIMATING_STATE;
                   _this.$.drawerContent.style.overflow = 'hidden';
-                  _this._fadeOutContent(_this.contentPlayer)
+                  _this._fadeOutContent(_this._contentPlayer)
                   .then(function(){
-                        _this.contentPlayer = null;
+                        _this._contentPlayer = null;
                         _this.$.placeholder.style.display = 'block';
                         _this.$.drawer.style.boxShadow = 'none';
                         _this.$.drawer.style.backgroundColor = 'rgba(0,0,0,0)';
                         requestAnimationFrame(function(){
-                              _this._rippleOut(_this.ripplePlayer)
+                              _this._rippleOut(_this._ripplePlayer)
                               .then(function(){
-                                    _this.ripplePlayer = null;
-                                    _this._translateOutFab(_this.fabPlayer)
+                                    _this._ripplePlayer = null;
+                                    _this._translateOutFab(_this._fabPlayer)
                                     .then(function(){
-                                          _this.fabPlayer = null;
+                                          _this._fabPlayer = null;
                                           _this.$.drawer.style.display = 'none';
-                                          _this.state = _this.FAB_STATE;
+                                          _this._state = _this._FAB_STATE;
+                                          _this._setAccessibility();
                                           return resolve();
                                     })
                               })
@@ -335,7 +395,7 @@ Polymer({
 
       },
 
-      isChrome: function(){
+      _isChrome: function(){
             // please note,
             // that IE11 now returns undefined again for window.chrome
             // and new Opera 30 outputs true for window.chrome
@@ -367,13 +427,13 @@ Polymer({
             var delay = 50;
 
             var keyframe = [
-                  { opacity: 0, transform: 'translate('+(_this.fabTranslation.x * -1)+'px, '+(_this.fabTranslation.y * -1)+'px) scale(0.8)', offset: 0 },
+                  { opacity: 0, transform: 'translate('+(_this._fabTranslation.x * -1)+'px, '+(_this._fabTranslation.y * -1)+'px) scale(0.8)', offset: 0 },
                   { transform: 'none', opacity: 1, offset: 1 }
             ];
 
             var effects = [];
-
-            Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
+            var children = Array.from(this.$.drawerContent.children);
+            children.forEach(function(child){
                   var width = child.width || child.style.width;
                   if(previousChildWidth === null) previousChildWidth = width;
                   else if(previousChildWidth !== width) childrenShareWidth = false;
@@ -381,7 +441,7 @@ Polymer({
 
             if(childrenShareWidth) childrenPerRow = (drawerBcr.width - 20) / previousChildWidth;
 
-            Array.prototype.forEach.call(this.$.drawerContent.children, function(child, index){
+            children.forEach(function(child, index){
 
                   child.style.opacity = '0';
 
@@ -391,7 +451,7 @@ Polymer({
                         delay: 0,
                         iterations: 1,
                         direction: 'normal',
-                        fill: _this.isChrome() ? 'forwards' : 'both'
+                        fill: _this._isChrome() ? 'forwards' : 'both'
                   };
 
                   if(childrenPerRow !== null){
@@ -405,7 +465,6 @@ Polymer({
             });
 
             return new GroupEffect(effects);
-
 
       },
 
@@ -424,15 +483,15 @@ Polymer({
 
       },
 
-      _fadeOutContent: function(contentPlayer){
+      _fadeOutContent: function(_contentPlayer){
 
             var _this = this;
 
             return new Promise(function(resolve, reject){
 
-                  contentPlayer.reverse();
+                  _contentPlayer.reverse();
 
-                  contentPlayer.onfinish = resolve;
+                  _contentPlayer.onfinish = resolve;
 
             })
 
@@ -446,15 +505,15 @@ Polymer({
 
                   var translateEffect = [
                         { transform: 'none', offset: 0 },
-                        { transform: 'translate('+_this.fabTranslation.x+'px, '+_this.fabTranslation.y+'px) scale('+_this.fabScale+')', offset: 1 }
+                        { transform: 'translate('+_this._fabTranslation.x+'px, '+_this._fabTranslation.y+'px) scale('+_this._fabScale+')', offset: 1 }
                   ];
                   var opacityEffect = [
                         { opacity: 1, offset: 0 },
                         { opacity: 0, offset: 1 }
                   ]
                   var kEffects = [
-                        new KeyframeEffect(_this.$.fab, translateEffect, _this.fabAnimationSettings),
-                        new KeyframeEffect(_this.$.fab.$.icon, opacityEffect, _this.fabAnimationSettings)
+                        new KeyframeEffect(_this.$.fab, translateEffect, _this._fabAnimationSettings),
+                        new KeyframeEffect(_this.$.fab.$.icon, opacityEffect, _this._fabAnimationSettings)
                   ];
                   var group = new GroupEffect(kEffects);
 
@@ -474,13 +533,13 @@ Polymer({
             return new Promise(function(resolve, reject){
                   var diameter = Math.max(drawerBcr.height, drawerBcr.width) * 1.06;
                   var scaleRatio = diameter / fabBcr.width;
-                  var fabHalfWidth = fabBcr.width * _this.fabScale / 2;
+                  var fabHalfWidth = fabBcr.width * _this._fabScale / 2;
                   var translateX = ( (drawerBcr.left + drawerBcr.width / 2 - fabHalfWidth) - placeholderBcr.left ) / scaleRatio;
                   var translateY = ( (drawerBcr.top + drawerBcr.height / 2 - fabHalfWidth) - placeholderBcr.top ) / scaleRatio;
                   var player = _this.$.placeholder.animate([
                         { transform: 'none', offset: 0 },
                         { transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)', offset: 1 }
-                  ], _this.drawerAnimationSettings);
+                  ], _this._drawerAnimationSettings);
                   player.onfinish = function(){
                         _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
                         _this.$.drawer.style.backgroundColor = _this.backgroundColor;
@@ -491,14 +550,14 @@ Polymer({
             })
       },
 
-      _rippleOut: function(ripplePlayer){
+      _rippleOut: function(_ripplePlayer){
             var _this = this;
 
             return new Promise(function(resolve, reject){
 
-                  ripplePlayer.reverse();
+                  _ripplePlayer.reverse();
 
-                  ripplePlayer.onfinish = function(){
+                  _ripplePlayer.onfinish = function(){
                         _this.$.placeholder.style.opacity = 0;
                         _this.$.fab.style.opacity = 1;
                         return resolve();
@@ -507,14 +566,14 @@ Polymer({
             })
       },
 
-      _translateOutFab: function(fabPlayer){
+      _translateOutFab: function(_fabPlayer){
             var _this = this;
 
             return new Promise(function(resolve, reject){
 
-                  fabPlayer.reverse();
+                  _fabPlayer.reverse();
 
-                  fabPlayer.onfinish = function(){
+                  _fabPlayer.onfinish = function(){
                         return resolve();
                   }
 

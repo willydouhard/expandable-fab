@@ -1,5 +1,20 @@
 {
   "name": "expandable-fab",
+  "version": "0.1.0",
+  "authors": [
+    "Willy Douhard"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/willydouhard/expandable-fab.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "web-components"
+  ],
+  "scripts": {
+  "test": "wct --plugin sauce"
+      },
   "description": "A paper fab that can expand to a drawer",
   "main": "expandable-fab.html",
   "dependencies": {
