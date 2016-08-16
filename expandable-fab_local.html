@@ -20,11 +20,10 @@
       #drawer {
             height:250px;
             width: 200px;
-            background-color: rgba(0, 0 ,0 , 0);
+            background-color: rgba(0, 0, 0, 0);
             border-radius: 2px;
             position: absolute;
-            top: 23px;
-            left: 23px;
+            z-index: 10;
             overflow: hidden;
             display: none;
       }
@@ -38,6 +37,15 @@
             padding: 10px;
             flex-wrap: wrap;
             box-sizing: border-box;
+            overflow: hidden;
+      }
+
+      #drawerContent ::content .drawerIcon{
+            cursor: pointer;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            transition: transform .3s ease;
       }
 
       #placeholder {
@@ -45,21 +53,19 @@
             position: absolute;
             will-change: transform;
             border-radius: 50%;
-            background-color: #ff4081;
             box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
       }
 
       </style>
 
       <div id="container">
-            <paper-fab id="fab" icon="add" noink on-tap="toDrawer"></paper-fab>
             <div id="drawer">
                   <div id="placeholder"></div>
                   <div id="drawerContent">
                         <content></content>
                   </div>
             </div>
-
+            <paper-fab id="fab" icon="[[fabIcon]]" noink on-tap="toDrawer"></paper-fab>
       </div>
 </template>
 
@@ -68,11 +74,42 @@ Polymer({
 
       is: 'expandable-fab',
 
-      listeners: {
-            'tap': 'toFab'
-      },
-
       properties: {
+
+            backgroundColor: {
+                  type: String,
+                  value: '#E91E63'
+            },
+
+            orientation: {
+                  type: String,
+                  value: 'center'
+            },
+
+            drawerHeight: {
+                  type: Number,
+                  value: 250
+            },
+
+            drawerWidth: {
+                  type: Number,
+                  value: 200
+            },
+
+            fabIcon: {
+                  type: String,
+                  value: 'add'
+            },
+
+            fabDiameter: {
+                  type: Number,
+                  value: 56
+            },
+
+            fabTranslation: {
+                  type: Object,
+                  value: {x: 0, y: 0}
+            },
 
             DRAWER_STATE: {
                   type: String,
@@ -88,7 +125,7 @@ Polymer({
             },
             state: {
                   type: String,
-                  value: this.FAB_STATE
+                  value: 'fab'
             },
             drawerAnimationSettings: {
                   type: Object,
@@ -129,6 +166,112 @@ Polymer({
                   value: null
             }
       },
+      attached: function(){
+            this._setupGeometry();
+            this._setupOrientation();
+            this._attachEvents();
+      },
+
+      _attachEvents: function(){
+            var _this = this;
+            Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
+                  child.classList.add('drawerIcon');
+                  child.addEventListener('click', function($event){
+                        _this.toFab();
+                  })
+            });
+            document.addEventListener('click', function($event){
+                  for(var i = 0; i < $event.path.length; i++){
+                        if($event.path[i] === _this){
+                              return false;
+                        }
+                  }
+                  return _this.toFab();
+            })
+      },
+
+      _setupGeometry: function(){
+            this.$.drawer.style.height = this.drawerHeight+'px';
+            this.$.drawer.style.width = this.drawerWidth+'px';
+            this.$.fab.style.height = this.fabDiameter+'px';
+            this.$.fab.style.width = this.fabDiameter+'px';
+            this.$.placeholder.style.height = (this.fabDiameter * this.fabScale)+'px';
+            this.$.placeholder.style.width = (this.fabDiameter * this.fabScale)+'px';
+            this.$.placeholder.style.backgroundColor = this.backgroundColor;
+            this.$.fab.style.backgroundColor = this.backgroundColor;
+      },
+
+      _setupOrientation: function(){
+
+            var _this = this;
+            var splitted = this.orientation.split('-');
+
+            if(splitted.length > 2) return console.error(this.orientation+' is not valid, only two direction are allowed at max, eg: top-left');
+
+            splitted.forEach(function(direction){
+                  switch(direction){
+                        case 'top':
+                              _this.$.drawer.style.top = '-'+(_this.drawerHeight - _this.fabDiameter / 2)+'px';
+                              _this.$.placeholder.style.top = '100%';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px';
+                              _this.fabTranslation.y = _this.fabDiameter / 2 * -1;
+                              if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
+                                    _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                                    _this.$.placeholder.style.left = '50%';
+                                    _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
+                              }
+                        break;
+                        case 'bottom':
+                              _this.$.drawer.style.top = (_this.fabDiameter / 2)+'px';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.top = scaledDiameter+'px';
+                              _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px'
+                              _this.fabTranslation.y = _this.fabDiameter / 2;
+                              if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
+                                    _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                                    _this.$.placeholder.style.left = '50%';
+                                    _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
+                              }
+                        break;
+                        case 'left':
+                              _this.$.drawer.style.left = '-'+(_this.drawerWidth - _this.fabDiameter / 2)+'px';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.left = '100%';
+                              _this.$.placeholder.style.marginLeft =  '-'+scaledDiameter+'px';
+                              _this.fabTranslation.x = _this.fabDiameter / 2 * -1;
+                              if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
+                                    _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                                    _this.$.placeholder.style.top = '50%';
+                                    _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
+                              }
+                        break;
+                        case 'right':
+                              _this.$.drawer.style.left = (_this.fabDiameter / 2)+'px';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale;
+                              _this.$.placeholder.style.left = '0%';
+                              _this.fabTranslation.x = _this.fabDiameter / 2;
+                              if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
+                                    _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                                    _this.$.placeholder.style.top = '50%';
+                                    _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
+                              }
+                        break;
+                        case 'center':
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.left = '50%';
+                              var scaledDiameter = _this.fabDiameter * _this.fabScale / 2;
+                              _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+scaledDiameter+'px';
+                        break;
+                        default:
+                              console.error('Cannot process direction '+direction);
+                        break;
+                  }
+            })
+
+      },
 
       toDrawer: function(){
             var _this = this;
@@ -140,11 +283,9 @@ Polymer({
                   var fabBcr = _this.$.fab.getBoundingClientRect();
                   var drawerBcr = _this.$.drawer.getBoundingClientRect();
                   var contentGroupEffect = _this._computeContentFadeInEffects(drawerBcr);
-                  _this.$.placeholder.style.height = (fabBcr.height * _this.fabScale)+'px';
-                  _this.$.placeholder.style.width = (fabBcr.width * _this.fabScale)+'px';
 
                   requestAnimationFrame(function(){
-                        _this._translateInFab(placeholderBcr, fabBcr)
+                        _this._translateInFab()
                         .then(function(fabPlayer){
                               _this.fabPlayer = fabPlayer;
                               _this._rippleIn(placeholderBcr, drawerBcr, fabBcr)
@@ -153,6 +294,7 @@ Polymer({
                                     _this._fadeInContent(contentGroupEffect)
                                     .then(function(contentPlayer){
                                           _this.contentPlayer = contentPlayer;
+                                          _this.$.drawerContent.style.overflow = 'auto';
                                           _this.state = _this.DRAWER_STATE;
                                           return resolve();
                                     })
@@ -168,7 +310,7 @@ Polymer({
             return new Promise(function(resolve, reject){
                   if(_this.state === _this.ANIMATING_STATE || _this.state === _this.FAB_STATE) return reject(new Error('Cannot display fab now'));
                   _this.state = _this.ANIMATING_STATE;
-
+                  _this.$.drawerContent.style.overflow = 'hidden';
                   _this._fadeOutContent(_this.contentPlayer)
                   .then(function(){
                         _this.contentPlayer = null;
@@ -193,15 +335,39 @@ Polymer({
 
       },
 
+      isChrome: function(){
+            // please note,
+            // that IE11 now returns undefined again for window.chrome
+            // and new Opera 30 outputs true for window.chrome
+            // and new IE Edge outputs to true now for window.chrome
+            // and if not iOS Chrome check
+            // so use the below updated condition
+            var isChromium = window.chrome,
+                winNav = window.navigator,
+                vendorName = winNav.vendor,
+                isOpera = winNav.userAgent.indexOf("OPR") > -1,
+                isIEedge = winNav.userAgent.indexOf("Edge") > -1,
+                isIOSChrome = winNav.userAgent.match("CriOS");
+
+            if(isIOSChrome){
+               return true;
+            } else if(isChromium !== null && isChromium !== undefined && vendorName === "Google Inc." && isOpera == false && isIEedge == false) {
+                  return true;
+            } else {
+                  return false;
+            }
+      },
+
       _computeContentFadeInEffects: function(drawerBcr){
 
+            var _this = this;
             var childrenPerRow = null;
             var childrenShareWidth = true;
             var previousChildWidth = null;
             var delay = 50;
 
             var keyframe = [
-                  { opacity: 0, transform: 'translate(-20px, -20px) scale(0.8)', offset: 0 },
+                  { opacity: 0, transform: 'translate('+(_this.fabTranslation.x * -1)+'px, '+(_this.fabTranslation.y * -1)+'px) scale(0.8)', offset: 0 },
                   { transform: 'none', opacity: 1, offset: 1 }
             ];
 
@@ -225,7 +391,7 @@ Polymer({
                         delay: 0,
                         iterations: 1,
                         direction: 'normal',
-                        fill: window.chrome ? 'forwards' : 'both'
+                        fill: _this.isChrome() ? 'forwards' : 'both'
                   };
 
                   if(childrenPerRow !== null){
@@ -272,17 +438,15 @@ Polymer({
 
       },
 
-      _translateInFab: function(placeholderBcr, fabBcr){
+      _translateInFab: function(){
 
             var _this = this;
 
             return new Promise(function(resolve, reject){
-                  var translateX = ( placeholderBcr.top - fabBcr.top ) * _this.fabScale;
-                  var translateY = ( placeholderBcr.left - fabBcr.left ) * _this.fabScale;
 
                   var translateEffect = [
                         { transform: 'none', offset: 0 },
-                        { transform: 'translate('+translateX+'px, '+translateY+'px) scale('+_this.fabScale+')', offset: 1 }
+                        { transform: 'translate('+_this.fabTranslation.x+'px, '+_this.fabTranslation.y+'px) scale('+_this.fabScale+')', offset: 1 }
                   ];
                   var opacityEffect = [
                         { opacity: 1, offset: 0 },
@@ -319,7 +483,7 @@ Polymer({
                   ], _this.drawerAnimationSettings);
                   player.onfinish = function(){
                         _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
-                        _this.$.drawer.style.backgroundColor = '#ff4081';
+                        _this.$.drawer.style.backgroundColor = _this.backgroundColor;
                         _this.$.placeholder.style.display = 'none';
                         return resolve(player);
                   };
