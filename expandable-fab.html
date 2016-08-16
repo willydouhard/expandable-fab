@@ -88,7 +88,6 @@
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
-            transition: transform .3s ease;
       }
 
       #placeholder {
@@ -228,12 +227,16 @@ Polymer({
                   })
             });
             document.addEventListener('click', function($event){
-                  for(var i = 0; i < $event.path.length; i++){
-                        if($event.path[i] === _this){
-                              return false;
-                        }
-                  }
-                  return _this.toFab();
+
+                  var target = $event.target;
+                  if(target === document.body) return _this.toFab();
+
+                  do {
+                     if(target === _this) return false;
+                     target = target.parentNode;
+                  } while (target !== document.body);
+                 return _this.toFab();
+
             })
       },
 
