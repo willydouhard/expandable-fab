@@ -38,5 +38,3 @@ The following custom properties and mixins are available for styling:
 | Custom property | Description | Default |
 | ----------------|-------------|---------- |
 | `--drawer-content-mixin` | Mixin applied to the drawer content | `{}` |
-
-@demo demo/index.html

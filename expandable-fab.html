@@ -43,6 +43,7 @@
       | ----------------|-------------|---------- |
       | `--drawer-content-mixin` | Mixin applied to the drawer content | `{}` |
 
+
       @demo demo/index.html
       -->
       <template>
@@ -148,6 +149,11 @@ Polymer({
                   value: 56
             },
 
+            state: {
+                  type: String,
+                  value: 'fab'
+            },
+
             _fabTranslation: {
                   type: Object,
                   value: {x: 0, y: 0}
@@ -164,10 +170,6 @@ Polymer({
             _ANIMATING_STATE: {
                   type: String,
                   value: 'animating'
-            },
-            _state: {
-                  type: String,
-                  value: 'fab'
             },
             _drawerAnimationSettings: {
                   type: Object,
@@ -325,20 +327,23 @@ Polymer({
 
       _setAccessibility: function(){
             Array.prototype.forEach.call(this.$.drawerContent.children, function(child, index){
-                  if(this._state === this._DRAWER_STATE){
+                  if(this.state === this._DRAWER_STATE){
                         child.setAttribute('tabindex', 0);
                         if(index === 0) child.focus();
-                  } else if (this._state === this._FAB_STATE) {
+                  } else if (this.state === this._FAB_STATE) {
                         child.setAttribute('tabindex', -1);
                   }
             });
+
+            if (this.state === this._FAB_STATE) this.$.fab.focus();
+
       },
 
       toDrawer: function(){
             var _this = this;
             return new Promise(function(resolve, reject){
-                  if(_this._state === _this._ANIMATING_STATE || _this.state === _this._DRAWER_STATE) return reject(new Error('Cannot display drawer now'));
-                  _this._state = _this._ANIMATING_STATE;
+                  if(_this.state === _this._ANIMATING_STATE || _this.state === _this._DRAWER_STATE) return reject(new Error('Cannot display drawer now'));
+                  _this.state = _this._ANIMATING_STATE;
                   _this.$.drawer.style.display = 'block';
                   var placeholderBcr = _this.$.placeholder.getBoundingClientRect();
                   var fabBcr = _this.$.fab.getBoundingClientRect();
@@ -356,8 +361,9 @@ Polymer({
                                     .then(function(_contentPlayer){
                                           _this._contentPlayer = _contentPlayer;
                                           _this.$.drawerContent.style.overflow = 'auto';
-                                          _this._state = _this._DRAWER_STATE;
+                                          _this.state = _this._DRAWER_STATE;
                                           _this._setAccessibility();
+                                          _this.fire('iron-state-changed', {state: _this.state})
                                           return resolve();
                                     })
                               })
@@ -370,8 +376,8 @@ Polymer({
       toFab: function(){
             var _this = this;
             return new Promise(function(resolve, reject){
-                  if(_this._state === _this._ANIMATING_STATE || _this._state === _this._FAB_STATE) return reject(new Error('Cannot display fab now'));
-                  _this._state = _this._ANIMATING_STATE;
+                  if(_this.state === _this._ANIMATING_STATE || _this.state === _this._FAB_STATE) return reject(new Error('Cannot display fab now'));
+                  _this.state = _this._ANIMATING_STATE;
                   _this.$.drawerContent.style.overflow = 'hidden';
                   _this._fadeOutContent(_this._contentPlayer)
                   .then(function(){
@@ -387,8 +393,9 @@ Polymer({
                                     .then(function(){
                                           _this._fabPlayer = null;
                                           _this.$.drawer.style.display = 'none';
-                                          _this._state = _this._FAB_STATE;
+                                          _this.state = _this._FAB_STATE;
                                           _this._setAccessibility();
+                                          _this.fire('iron-state-changed', {state: _this._state})
                                           return resolve();
                                     })
                               })
