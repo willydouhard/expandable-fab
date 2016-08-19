@@ -97,7 +97,6 @@ The following custom properties and mixins are available for styling:
             position: absolute;
             will-change: transform;
             border-radius: 50%;
-            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
       }
 
       </style>
@@ -114,9 +113,10 @@ The following custom properties and mixins are available for styling:
 </template>
 
 <script>
+
+'use strict';
+
 Polymer({
-
-
 
       /**
        * Fired on state change, detail is an object with a state property
@@ -335,16 +335,17 @@ Polymer({
       },
 
       _setAccessibility: function(){
+
+            var _this = this;
+
             Array.prototype.forEach.call(this.$.drawerContent.children, function(child, index){
-                  if(this.state === this._DRAWER_STATE){
+                  if(_this.state === _this._DRAWER_STATE){
                         child.setAttribute('tabindex', 0);
                         if(index === 0) child.focus();
-                  } else if (this.state === this._FAB_STATE) {
+                  } else if (_this.state === _this._FAB_STATE) {
                         child.setAttribute('tabindex', -1);
                   }
             });
-
-            if (this.state === this._FAB_STATE) this.$.fab.focus();
 
       },
 
