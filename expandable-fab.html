@@ -223,13 +223,13 @@ Polymer({
             this._setupGeometry();
             this._setupOrientation();
             this._setupContent();
+            this._setAccessibility();
       },
 
       _setupContent: function(){
             var _this = this;
             Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
                   child.classList.add('drawerIcon');
-                  child.setAttribute('tabindex', -1);
                   child.addEventListener('click', function(){
                         _this.toFab();
                   })
