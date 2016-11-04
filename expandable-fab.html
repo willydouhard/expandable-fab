@@ -85,8 +85,8 @@ The following custom properties and mixins are available for styling:
             @apply(--drawer-content-mixin);
       }
 
-      #drawerContent ::content .drawerIcon{
-            cursor: pointer;
+      #drawerContent ::content .drawerItem{
+            @apply(--drawer-item-mixin);
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
@@ -127,6 +127,11 @@ Polymer({
       is: 'expandable-fab',
 
       properties: {
+
+            autoClose: {
+                  type: Boolean,
+                  value: false
+            },
 
             backgroundColor: {
                   type: String,
@@ -229,10 +234,12 @@ Polymer({
       _setupContent: function(){
             var _this = this;
             Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
-                  child.classList.add('drawerIcon');
-                  child.addEventListener('click', function(){
-                        _this.toFab();
-                  })
+                  child.classList.add('drawerItem');
+                  if(_this.autoClose){
+                        child.addEventListener('click', function(){
+                              _this.toFab();
+                        })
+                  }
                   child.addEventListener('keydown', function($event){
                         if($event.keyCode === 13) child.dispatchEvent(new Event('click'));
                   })
@@ -572,7 +579,7 @@ Polymer({
 
       _rippleOut: function(_rippleEffect){
             var _this = this;
-            
+
             return new Promise(function(resolve, reject){
                   _rippleEffect.offset = 0;
                   var player = _this.$.placeholder.animate([
