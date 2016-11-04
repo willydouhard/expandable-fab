@@ -23,12 +23,12 @@ background-color="red"
 orientation="top-left"
 fab-icon="add"
 fab-diameter="60">
-     <img class="item" src="icons/logo_docs_64px.png"/>
-     <img class="item" src="icons/logo_forms_64px.png"/>
-     <img class="item" src="icons/logo_gmail_64px.png"/>
-     <img class="item" src="icons/logo_google_plus_64px.png"/>
-     <img class="item" src="icons/logo_hangouts_64px.png"/>
-     <img class="item" src="icons/logo_slides_64px.png"/>
+<img class="item" src="icons/logo_docs_64px.png"/>
+<img class="item" src="icons/logo_forms_64px.png"/>
+<img class="item" src="icons/logo_gmail_64px.png"/>
+<img class="item" src="icons/logo_google_plus_64px.png"/>
+<img class="item" src="icons/logo_hangouts_64px.png"/>
+<img class="item" src="icons/logo_slides_64px.png"/>
 </expandable-fab>
 ```
 
@@ -119,10 +119,10 @@ The following custom properties and mixins are available for styling:
 Polymer({
 
       /**
-       * Fired on state change, detail is an object with a state property
-       *
-       * @event iron-state-changed
-       */
+      * Fired on state change, detail is an object with a state property
+      *
+      * @event iron-state-changed
+      */
 
       is: 'expandable-fab',
 
@@ -210,7 +210,7 @@ Polymer({
                   type: Object,
                   value: null
             },
-            _ripplePlayer: {
+            _rippleEffect: {
                   type: Object,
                   value: null
             },
@@ -243,10 +243,10 @@ Polymer({
                   if(target === document.body) return _this.toFab();
 
                   do {
-                     if(target === _this) return false;
-                     target = target.parentNode;
+                        if(target === _this) return false;
+                        target = target.parentNode;
                   } while (target !== document.body);
-                 return _this.toFab();
+                  return _this.toFab();
 
             })
       },
@@ -272,62 +272,62 @@ Polymer({
             splitted.forEach(function(direction){
                   switch(direction){
                         case 'top':
-                              _this.$.drawer.style.top = '-'+(_this.drawerHeight - _this.fabDiameter / 2)+'px';
-                              _this.$.placeholder.style.top = '100%';
-                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
-                              _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px';
-                              _this._fabTranslation.y = _this.fabDiameter / 2 * -1;
-                              if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
-                                    _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
-                                    _this.$.placeholder.style.left = '50%';
-                                    _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
-                              }
+                        _this.$.drawer.style.top = '-'+(_this.drawerHeight - _this.fabDiameter / 2)+'px';
+                        _this.$.placeholder.style.top = '100%';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px';
+                        _this._fabTranslation.y = _this.fabDiameter / 2 * -1;
+                        if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.left = '50%';
+                              _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
+                        }
                         break;
                         case 'bottom':
-                              _this.$.drawer.style.top = (_this.fabDiameter / 2)+'px';
-                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
-                              _this.$.placeholder.style.top = scaledDiameter+'px';
-                              _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px'
-                              _this._fabTranslation.y = _this.fabDiameter / 2;
-                              if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
-                                    _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
-                                    _this.$.placeholder.style.left = '50%';
-                                    _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
-                              }
+                        _this.$.drawer.style.top = (_this.fabDiameter / 2)+'px';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.top = scaledDiameter+'px';
+                        _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px'
+                        _this._fabTranslation.y = _this.fabDiameter / 2;
+                        if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.left = '50%';
+                              _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
+                        }
                         break;
                         case 'left':
-                              _this.$.drawer.style.left = '-'+(_this.drawerWidth - _this.fabDiameter / 2)+'px';
-                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
-                              _this.$.placeholder.style.left = '100%';
-                              _this.$.placeholder.style.marginLeft =  '-'+scaledDiameter+'px';
-                              _this._fabTranslation.x = _this.fabDiameter / 2 * -1;
-                              if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
-                                    _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
-                                    _this.$.placeholder.style.top = '50%';
-                                    _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
-                              }
+                        _this.$.drawer.style.left = '-'+(_this.drawerWidth - _this.fabDiameter / 2)+'px';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.left = '100%';
+                        _this.$.placeholder.style.marginLeft =  '-'+scaledDiameter+'px';
+                        _this._fabTranslation.x = _this.fabDiameter / 2 * -1;
+                        if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
+                        }
                         break;
                         case 'right':
-                              _this.$.drawer.style.left = (_this.fabDiameter / 2)+'px';
-                              var scaledDiameter = _this.fabDiameter * _this._fabScale;
-                              _this.$.placeholder.style.left = '0%';
-                              _this._fabTranslation.x = _this.fabDiameter / 2;
-                              if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
-                                    _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
-                                    _this.$.placeholder.style.top = '50%';
-                                    _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
-                              }
+                        _this.$.drawer.style.left = (_this.fabDiameter / 2)+'px';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.left = '0%';
+                        _this._fabTranslation.x = _this.fabDiameter / 2;
+                        if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
+                        }
                         break;
                         case 'center':
-                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
-                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
-                              _this.$.placeholder.style.top = '50%';
-                              _this.$.placeholder.style.left = '50%';
-                              var scaledDiameter = _this.fabDiameter * _this._fabScale / 2;
-                              _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+scaledDiameter+'px';
+                        _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                        _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                        _this.$.placeholder.style.top = '50%';
+                        _this.$.placeholder.style.left = '50%';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale / 2;
+                        _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+scaledDiameter+'px';
                         break;
                         default:
-                              console.error('Cannot process direction '+direction);
+                        console.error('Cannot process direction '+direction);
                         break;
                   }
             })
@@ -365,8 +365,8 @@ Polymer({
                         .then(function(_fabPlayer){
                               _this._fabPlayer = _fabPlayer;
                               _this._rippleIn(placeholderBcr, drawerBcr, fabBcr)
-                              .then(function(_ripplePlayer){
-                                    _this._ripplePlayer = _ripplePlayer;
+                              .then(function(_rippleEffect){
+                                    _this._rippleEffect = _rippleEffect;
                                     _this._fadeInContent(contentGroupEffect)
                                     .then(function(_contentPlayer){
                                           _this._contentPlayer = _contentPlayer;
@@ -396,9 +396,9 @@ Polymer({
                         _this.$.drawer.style.boxShadow = 'none';
                         _this.$.drawer.style.backgroundColor = 'rgba(0,0,0,0)';
                         requestAnimationFrame(function(){
-                              _this._rippleOut(_this._ripplePlayer)
+                              _this._rippleOut(_this._rippleEffect)
                               .then(function(){
-                                    _this._ripplePlayer = null;
+                                    _this._rippleEffect = null;
                                     _this._translateOutFab(_this._fabPlayer)
                                     .then(function(){
                                           _this._fabPlayer = null;
@@ -423,14 +423,14 @@ Polymer({
             // and if not iOS Chrome check
             // so use the below updated condition
             var isChromium = window.chrome,
-                winNav = window.navigator,
-                vendorName = winNav.vendor,
-                isOpera = winNav.userAgent.indexOf("OPR") > -1,
-                isIEedge = winNav.userAgent.indexOf("Edge") > -1,
-                isIOSChrome = winNav.userAgent.match("CriOS");
+            winNav = window.navigator,
+            vendorName = winNav.vendor,
+            isOpera = winNav.userAgent.indexOf("OPR") > -1,
+            isIEedge = winNav.userAgent.indexOf("Edge") > -1,
+            isIOSChrome = winNav.userAgent.match("CriOS");
 
             if(isIOSChrome){
-               return true;
+                  return true;
             } else if(isChromium !== null && isChromium !== undefined && vendorName === "Google Inc." && isOpera == false && isIEedge == false) {
                   return true;
             } else {
@@ -564,20 +564,22 @@ Polymer({
                         _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
                         _this.$.drawer.style.backgroundColor = _this.backgroundColor;
                         _this.$.placeholder.style.display = 'none';
-                        return resolve(player);
+                        return resolve({ transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)'});
                   };
 
             })
       },
 
-      _rippleOut: function(_ripplePlayer){
+      _rippleOut: function(_rippleEffect){
             var _this = this;
-
+            
             return new Promise(function(resolve, reject){
-
-                  _ripplePlayer.reverse();
-
-                  _ripplePlayer.onfinish = function(){
+                  _rippleEffect.offset = 0;
+                  var player = _this.$.placeholder.animate([
+                        _rippleEffect,
+                        { transform: 'none', offset: 1 }
+                  ], _this._drawerAnimationSettings);
+                  player.onfinish = function(){
                         _this.$.placeholder.style.opacity = 0;
                         _this.$.fab.style.opacity = 1;
                         return resolve();
