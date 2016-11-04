@@ -1,6 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-fab/paper-fab.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icons/social-icons.html">
 
 <!--
 WARNING: This component is relying on the web animation api. The poly fill is in the component dependencies, so you just have to include it in your index.html file.
@@ -59,6 +60,9 @@ The following custom properties and mixins are available for styling:
 
       #fab {
             will-change: transform;
+            --paper-fab-iron-icon: {
+                  @apply(--expandable-fab-icon);
+            }
       }
 
       #drawer {
@@ -77,7 +81,6 @@ The following custom properties and mixins are available for styling:
             height: 100%;
             display: flex;
             justify-content: space-around;
-            align-items: center;
             padding: 10px;
             flex-wrap: wrap;
             box-sizing: border-box;
@@ -105,7 +108,7 @@ The following custom properties and mixins are available for styling:
             <div id="drawer">
                   <div id="placeholder"></div>
                   <div id="drawerContent">
-                        <content></content>
+                        <content id="content"></content>
                   </div>
             </div>
             <paper-fab id="fab" icon="[[fabIcon]]" noink on-tap="toDrawer"></paper-fab>
@@ -132,6 +135,8 @@ Polymer({
                   type: Boolean,
                   value: false
             },
+
+            items: Array,
 
             backgroundColor: {
                   type: String,
@@ -208,32 +213,45 @@ Polymer({
                   }
             },
             _fabScale: {
-                  type: Number,
+                  type: Array,
                   value: 1.2
             },
-            _fabPlayer: {
+            _fabEffects: {
                   type: Object,
                   value: null
             },
             _rippleEffect: {
-                  type: Object,
+                  type: Array,
                   value: null
             },
-            _contentPlayer: {
-                  type: Object,
+            _contentEffects: {
+                  type: Array,
                   value: null
             }
       },
-      attached: function(){
+      ready: function(){
             this._setupGeometry();
             this._setupOrientation();
             this._setupContent();
             this._setAccessibility();
       },
 
+      _cleanItems: function() {
+            var buffer = [];
+
+            this.items.forEach(function(child) {
+                  if(child.nodeName !== '#text') buffer.push(child);
+            })
+
+            this.items = buffer;
+      },
+
       _setupContent: function(){
             var _this = this;
-            Array.prototype.forEach.call(this.$.drawerContent.children, function(child){
+            this.items = this.$.content.getDistributedNodes();
+            this._cleanItems();
+            this.items = (this.items.length) ? this.items : Array.from(this.$.drawerContent.children);
+            this.items.forEach(function(child){
                   child.classList.add('drawerItem');
                   if(_this.autoClose){
                         child.addEventListener('click', function(){
@@ -243,9 +261,11 @@ Polymer({
                   child.addEventListener('keydown', function($event){
                         if($event.keyCode === 13) child.dispatchEvent(new Event('click'));
                   })
+
+
             });
             document.addEventListener('click', function($event){
-
+                  if(~$event.path.indexOf(_this)) return;
                   var target = $event.target;
                   if(target === document.body) return _this.toFab();
 
@@ -345,13 +365,14 @@ Polymer({
 
             var _this = this;
 
-            Array.prototype.forEach.call(this.$.drawerContent.children, function(child, index){
+            this.items.forEach(function(child, index){
                   if(_this.state === _this._DRAWER_STATE){
                         child.setAttribute('tabindex', 0);
                         if(index === 0) child.focus();
                   } else if (_this.state === _this._FAB_STATE) {
                         child.setAttribute('tabindex', -1);
                   }
+
             });
 
       },
@@ -361,6 +382,7 @@ Polymer({
             return new Promise(function(resolve, reject){
                   if(_this.state === _this._ANIMATING_STATE || _this.state === _this._DRAWER_STATE) return reject(new Error('Cannot display drawer now'));
                   _this.state = _this._ANIMATING_STATE;
+                  _this.fire('iron-activate', {from: _this._FAB_STATE, to: _this._DRAWER_STATE})
                   _this.$.drawer.style.display = 'block';
                   var placeholderBcr = _this.$.placeholder.getBoundingClientRect();
                   var fabBcr = _this.$.fab.getBoundingClientRect();
@@ -369,14 +391,11 @@ Polymer({
 
                   requestAnimationFrame(function(){
                         _this._translateInFab()
-                        .then(function(_fabPlayer){
-                              _this._fabPlayer = _fabPlayer;
+                        .then(function(){
                               _this._rippleIn(placeholderBcr, drawerBcr, fabBcr)
-                              .then(function(_rippleEffect){
-                                    _this._rippleEffect = _rippleEffect;
+                              .then(function(){
                                     _this._fadeInContent(contentGroupEffect)
-                                    .then(function(_contentPlayer){
-                                          _this._contentPlayer = _contentPlayer;
+                                    .then(function(){
                                           _this.$.drawerContent.style.overflow = 'auto';
                                           _this.state = _this._DRAWER_STATE;
                                           _this._setAccessibility();
@@ -395,20 +414,21 @@ Polymer({
             return new Promise(function(resolve, reject){
                   if(_this.state === _this._ANIMATING_STATE || _this.state === _this._FAB_STATE) return reject(new Error('Cannot display fab now'));
                   _this.state = _this._ANIMATING_STATE;
+                  _this.fire('iron-activate', {to: _this._FAB_STATE, from: _this._DRAWER_STATE})
                   _this.$.drawerContent.style.overflow = 'hidden';
-                  _this._fadeOutContent(_this._contentPlayer)
+                  _this._fadeOutContent()
                   .then(function(){
-                        _this._contentPlayer = null;
+                        _this._contentEffects = null;
                         _this.$.placeholder.style.display = 'block';
                         _this.$.drawer.style.boxShadow = 'none';
                         _this.$.drawer.style.backgroundColor = 'rgba(0,0,0,0)';
                         requestAnimationFrame(function(){
-                              _this._rippleOut(_this._rippleEffect)
+                              _this._rippleOut()
                               .then(function(){
                                     _this._rippleEffect = null;
-                                    _this._translateOutFab(_this._fabPlayer)
+                                    _this._translateOutFab()
                                     .then(function(){
-                                          _this._fabPlayer = null;
+                                          _this._fabEffects = null;
                                           _this.$.drawer.style.display = 'none';
                                           _this.state = _this._FAB_STATE;
                                           _this._setAccessibility();
@@ -457,18 +477,19 @@ Polymer({
                   { opacity: 0, transform: 'translate('+(_this._fabTranslation.x * -1)+'px, '+(_this._fabTranslation.y * -1)+'px) scale(0.8)', offset: 0 },
                   { transform: 'none', opacity: 1, offset: 1 }
             ];
+            this._contentEffects = [];
 
             var effects = [];
-            var children = Array.from(this.$.drawerContent.children);
-            children.forEach(function(child){
+            this.items.forEach(function(child){
                   var width = child.width || child.style.width;
                   if(previousChildWidth === null) previousChildWidth = width;
                   else if(previousChildWidth !== width) childrenShareWidth = false;
+
             });
 
             if(childrenShareWidth) childrenPerRow = (drawerBcr.width - 20) / previousChildWidth;
 
-            children.forEach(function(child, index){
+            this.items.forEach(function(child, index){
 
                   child.style.opacity = '0';
 
@@ -478,7 +499,7 @@ Polymer({
                         delay: 0,
                         iterations: 1,
                         direction: 'normal',
-                        fill: _this._isChrome() ? 'forwards' : 'both'
+                        fill: 'forwards'
                   };
 
                   if(childrenPerRow !== null){
@@ -486,7 +507,7 @@ Polymer({
                         var col = (index < childrenPerRow - 1) ? index : index - row;
                         settings.delay = (row + col) * delay;
                   }
-
+                  _this._contentEffects.push({effect: keyframe, settings: settings});
                   effects.push(new KeyframeEffect(child, keyframe, settings));
 
             });
@@ -510,15 +531,21 @@ Polymer({
 
       },
 
-      _fadeOutContent: function(_contentPlayer){
+      _fadeOutContent: function(){
 
             var _this = this;
 
             return new Promise(function(resolve, reject){
 
-                  _contentPlayer.reverse();
+                  var effects = [];
 
-                  _contentPlayer.onfinish = resolve;
+                  _this.items.forEach(function(child, index){
+
+                        effects.push(new KeyframeEffect(child, _this._reverse(_this._contentEffects[index].effect), _this._contentEffects[index].settings));
+
+                  });
+                  var player = document.timeline.play(new GroupEffect(effects));
+                  player.onfinish = resolve;
 
             })
 
@@ -537,18 +564,23 @@ Polymer({
                   var opacityEffect = [
                         { opacity: 1, offset: 0 },
                         { opacity: 0, offset: 1 }
-                  ]
+                  ];
+                  _this._fabEffects = {};
+                  _this._fabEffects.translate = translateEffect;
+                  _this._fabEffects.opacity = opacityEffect;
+
                   var kEffects = [
                         new KeyframeEffect(_this.$.fab, translateEffect, _this._fabAnimationSettings),
                         new KeyframeEffect(_this.$.fab.$.icon, opacityEffect, _this._fabAnimationSettings)
                   ];
+
                   var group = new GroupEffect(kEffects);
 
                   var player = document.timeline.play(group);
                   player.onfinish = function(){
                         _this.$.fab.style.opacity = 0;
                         _this.$.placeholder.style.opacity = 1;
-                        return resolve(player);
+                        return resolve();
                   }
 
             })
@@ -558,34 +590,31 @@ Polymer({
             var _this = this;
 
             return new Promise(function(resolve, reject){
-                  var diameter = Math.max(drawerBcr.height, drawerBcr.width) * 1.06;
+                  var diameter = Math.max(drawerBcr.height, drawerBcr.width) * 1.3;
                   var scaleRatio = diameter / fabBcr.width;
                   var fabHalfWidth = fabBcr.width * _this._fabScale / 2;
                   var translateX = ( (drawerBcr.left + drawerBcr.width / 2 - fabHalfWidth) - placeholderBcr.left ) / scaleRatio;
                   var translateY = ( (drawerBcr.top + drawerBcr.height / 2 - fabHalfWidth) - placeholderBcr.top ) / scaleRatio;
-                  var player = _this.$.placeholder.animate([
+                  _this._rippleEffect = [
                         { transform: 'none', offset: 0 },
                         { transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)', offset: 1 }
-                  ], _this._drawerAnimationSettings);
+                  ];
+                  var player = _this.$.placeholder.animate(_this._rippleEffect, _this._drawerAnimationSettings);
                   player.onfinish = function(){
                         _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
                         _this.$.drawer.style.backgroundColor = _this.backgroundColor;
                         _this.$.placeholder.style.display = 'none';
-                        return resolve({ transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)'});
+                        return resolve();
                   };
 
             })
       },
 
-      _rippleOut: function(_rippleEffect){
+      _rippleOut: function(){
             var _this = this;
 
             return new Promise(function(resolve, reject){
-                  _rippleEffect.offset = 0;
-                  var player = _this.$.placeholder.animate([
-                        _rippleEffect,
-                        { transform: 'none', offset: 1 }
-                  ], _this._drawerAnimationSettings);
+                  var player = _this.$.placeholder.animate(_this._reverse(_this._rippleEffect), _this._drawerAnimationSettings);
                   player.onfinish = function(){
                         _this.$.placeholder.style.opacity = 0;
                         _this.$.fab.style.opacity = 1;
@@ -595,18 +624,31 @@ Polymer({
             })
       },
 
-      _translateOutFab: function(_fabPlayer){
+      _translateOutFab: function(){
             var _this = this;
 
             return new Promise(function(resolve, reject){
+                  var kEffects = [
+                        new KeyframeEffect(_this.$.fab, _this._reverse(_this._fabEffects.translate), _this._fabAnimationSettings),
+                        new KeyframeEffect(_this.$.fab.$.icon, _this._reverse(_this._fabEffects.opacity), _this._fabAnimationSettings)
+                  ];
 
-                  _fabPlayer.reverse();
+                  var group = new GroupEffect(kEffects);
 
-                  _fabPlayer.onfinish = function(){
-                        return resolve();
-                  }
+                  var player = document.timeline.play(group);
+
+                  player.onfinish = resolve;
 
             })
+      },
+
+      _reverse: function(array) {
+            var buffer = [];
+            for(var i = 0; i < array.length; i++) {
+                  buffer[i] = array[array.length - 1 - i];
+                  buffer[i].offset = i;
+            }
+            return buffer;
       }
 
 });
