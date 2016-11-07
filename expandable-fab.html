@@ -248,7 +248,7 @@ Polymer({
 
       _setupContent: function(){
             var _this = this;
-            this.items = this.$.content.getDistributedNodes();
+            this.items = Polymer.dom(this.$.content).getDistributedNodes();
             this._cleanItems();
             this.items = (this.items.length) ? this.items : Array.from(this.$.drawerContent.children);
             this.items.forEach(function(child){
@@ -265,7 +265,8 @@ Polymer({
 
             });
             document.addEventListener('click', function($event){
-                  if(~$event.path.indexOf(_this)) return;
+                  var path = $event.path || $event._path;
+                  if(~path.indexOf(_this)) return;
                   var target = $event.target;
                   if(target === document.body) return _this.toFab();
 
