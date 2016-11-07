@@ -49,9 +49,10 @@ The following custom properties and mixins are available for styling:
 <dom-module id="expandable-fab">
 
       <template>
-      <style>
+      <style is="custom-style">
       :host {
             display: block;
+            --element-background-color: var(--expandable-fab-background-color, red);
       }
 
       #container {
@@ -59,6 +60,7 @@ The following custom properties and mixins are available for styling:
       }
 
       #fab {
+            background-color: var(--element-background-color);
             will-change: transform;
             --paper-fab-iron-icon: {
                   @apply(--expandable-fab-icon);
@@ -96,6 +98,7 @@ The following custom properties and mixins are available for styling:
       }
 
       #placeholder {
+            background-color: var(--element-background-color);
             opacity: 0;
             position: absolute;
             will-change: transform;
@@ -138,15 +141,12 @@ Polymer({
 
             items: Array,
 
-            backgroundColor: {
-                  type: String,
-                  value: '#E91E63'
-            },
-
             orientation: {
                   type: String,
                   value: 'center'
             },
+
+            backgroundColor: String,
 
             drawerHeight: {
                   type: Number,
@@ -229,6 +229,11 @@ Polymer({
                   value: null
             }
       },
+
+      attached: function() {
+            this.backgroundColor = this.getComputedStyleValue('--element-background-color');
+      },
+
       ready: function(){
             this._setupGeometry();
             this._setupOrientation();
@@ -286,8 +291,6 @@ Polymer({
             this.$.fab.style.width = this.fabDiameter+'px';
             this.$.placeholder.style.height = (this.fabDiameter * this._fabScale)+'px';
             this.$.placeholder.style.width = (this.fabDiameter * this._fabScale)+'px';
-            this.$.placeholder.style.backgroundColor = this.backgroundColor;
-            this.$.fab.style.backgroundColor = this.backgroundColor;
       },
 
       _setupOrientation: function(){
