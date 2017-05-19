@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/willydouhard/expandable-fab.svg?branch=master)](https://travis-ci.org/willydouhard/expandable-fab)
-
-_[Demo and API docs](https://willydouhard.github.io/expandable-fab/components/expandable-fab/)_
+_[Demo](https://willydouhard.github.io/expandable-fab/components/expandable-fab/)_
 
 WARNING: This component is relying on the web animation api. The poly fill is in the component dependencies, so you just have to include it in your index.html file.
 
