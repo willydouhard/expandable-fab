@@ -1,0 +1,42 @@
+{
+  "name": "expandable-fab",
+  "authors": [
+    "Willy Douhard"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/willydouhard/expandable-fab.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "web-components"
+  ],
+  "scripts": {
+    "test": "wct --plugin sauce"
+  },
+  "description": "A paper fab that can expand to a drawer",
+  "main": "expandable-fab.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.4.0",
+    "web-animations-js": "~2.2.2",
+    "paper-fab": "~1.2.0",
+    "iron-icons": "~1.1.3"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+    "web-component-tester": "^4.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "homepage": "https://github.com/willydouhard/expandable-fab",
+  "_release": "09604122f0",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "09604122f0e5aa19094d4acb7e46b9f6bd31ce92"
+  },
+  "_source": "https://github.com/willydouhard/expandable-fab.git",
+  "_target": "master",
+  "_originalSource": "willydouhard/expandable-fab",
+  "_direct": true
+}

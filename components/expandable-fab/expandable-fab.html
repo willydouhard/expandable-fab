@@ -1,0 +1,678 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-fab/paper-fab.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+<link rel="import" href="../iron-icons/social-icons.html">
+
+<!--
+WARNING: This component is relying on the web animation api. The poly fill is in the component dependencies, so you just have to include it in your index.html file.
+
+Example:
+
+```html
+<script src="bower_components/web-animations-js/web-animations-next-lite.min.js"></script>
+```
+
+`expandable-fab` is a paper-fab that can expand into a drawer (android like).
+
+Example:
+
+```html
+<expandable-fab
+drawer-height="300"
+drawer-width="200"
+background-color="red"
+orientation="top-left"
+fab-icon="add"
+fab-diameter="60">
+<img class="item" src="icons/logo_docs_64px.png"/>
+<img class="item" src="icons/logo_forms_64px.png"/>
+<img class="item" src="icons/logo_gmail_64px.png"/>
+<img class="item" src="icons/logo_google_plus_64px.png"/>
+<img class="item" src="icons/logo_hangouts_64px.png"/>
+<img class="item" src="icons/logo_slides_64px.png"/>
+</expandable-fab>
+```
+
+You can style the items you are passing with a css class. If you want to change the way your content is displayed when the drawer is open,
+use the --drawer-content-mixin to apply your rules. By default, the component is using flexbox
+
+### Styling
+The following custom properties and mixins are available for styling:
+
+| Custom property | Description | Default |
+| ----------------|-------------|---------- |
+| `--drawer-content-mixin` | Mixin applied to the drawer content | `{}` |
+
+@demo demo/index.html
+-->
+
+<dom-module id="expandable-fab">
+
+      <template>
+      <style is="custom-style">
+      :host {
+            display: block;
+            --element-background-color: var(--expandable-fab-background-color, red);
+      }
+
+      #container {
+            position: relative;
+      }
+
+      #fab {
+            background-color: var(--element-background-color);
+            will-change: transform;
+            --paper-fab-iron-icon: {
+                  @apply(--expandable-fab-icon);
+            }
+      }
+
+      #drawer {
+            height:250px;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0);
+            border-radius: 2px;
+            position: absolute;
+            z-index: 10;
+            overflow: hidden;
+            display: none;
+      }
+
+      #drawerContent {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            flex-wrap: wrap;
+            box-sizing: border-box;
+            overflow: hidden;
+            @apply(--drawer-content-mixin);
+      }
+
+      #drawerContent ::content .drawerItem{
+            @apply(--drawer-item-mixin);
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+      }
+
+      #placeholder {
+            background-color: var(--element-background-color);
+            opacity: 0;
+            position: absolute;
+            will-change: transform;
+            border-radius: 50%;
+      }
+
+      </style>
+
+      <div id="container">
+            <div id="drawer">
+                  <div id="placeholder"></div>
+                  <div id="drawerContent">
+                        <content id="content"></content>
+                  </div>
+            </div>
+            <paper-fab id="fab" icon="[[fabIcon]]" noink on-tap="toDrawer"></paper-fab>
+      </div>
+</template>
+
+<script>
+
+'use strict';
+
+Polymer({
+
+      /**
+      * Fired on state change, detail is an object with a state property
+      *
+      * @event iron-state-changed
+      */
+
+      is: 'expandable-fab',
+
+      properties: {
+
+            autoClose: {
+                  type: Boolean,
+                  value: false
+            },
+
+            items: Array,
+
+            orientation: {
+                  type: String,
+                  value: 'center'
+            },
+
+            backgroundColor: String,
+
+            drawerHeight: {
+                  type: Number,
+                  value: 250
+            },
+
+            drawerWidth: {
+                  type: Number,
+                  value: 200
+            },
+
+            fabIcon: {
+                  type: String,
+                  value: 'add'
+            },
+
+            fabDiameter: {
+                  type: Number,
+                  value: 56
+            },
+
+            state: {
+                  type: String,
+                  value: 'fab'
+            },
+
+            _fabTranslation: {
+                  type: Object
+            },
+
+            _DRAWER_STATE: {
+                  type: String,
+                  value: 'drawer'
+            },
+            _FAB_STATE: {
+                  type: String,
+                  value: 'fab'
+            },
+            _ANIMATING_STATE: {
+                  type: String,
+                  value: 'animating'
+            },
+            _drawerAnimationSettings: {
+                  type: Object,
+                  value: {
+                        duration: 250, //milliseconds
+                        easing: 'ease-in-out', //'linear', a bezier curve, etc.
+                        delay: 0, //milliseconds
+                        iterations: 1, //or a number
+                        direction: 'normal', //'normal', 'reverse', etc.
+                        fill: 'forwards' //'backwards', 'both', 'none', 'auto'
+                  }
+            },
+            _fabAnimationSettings: {
+                  type: Object,
+                  value: {
+                        duration: 150, //milliseconds
+                        easing: 'linear', //'linear', a bezier curve, etc.
+                        delay: 0, //milliseconds
+                        iterations: 1, //or a number
+                        direction: 'normal', //'normal', 'reverse', etc.
+                        fill: 'forwards' //'backwards', 'both', 'none', 'auto'
+                  }
+            },
+            _fabScale: {
+                  type: Array,
+                  value: 1.2
+            },
+            _fabEffects: {
+                  type: Object,
+                  value: null
+            },
+            _rippleEffect: {
+                  type: Array,
+                  value: null
+            },
+            _contentEffects: {
+                  type: Array,
+                  value: null
+            }
+      },
+
+      attached: function() {
+            this.backgroundColor = this.getComputedStyleValue('--element-background-color');
+      },
+
+      ready: function(){
+            this._setupGeometry();
+            this._setupOrientation();
+            this._setupContent();
+            this._setAccessibility();
+      },
+
+      _cleanItems: function() {
+            var buffer = [];
+
+            this.items.forEach(function(child) {
+                  if(child.nodeName !== '#text') buffer.push(child);
+            })
+
+            this.items = buffer;
+      },
+
+      _setupContent: function(){
+            var _this = this;
+            this.items = Polymer.dom(this.$.content).getDistributedNodes();
+            this._cleanItems();
+            this.items = (this.items.length) ? this.items : Array.from(this.$.drawerContent.children);
+            this.items.forEach(function(child){
+                  child.classList.add('drawerItem');
+                  if(_this.autoClose){
+                        child.addEventListener('click', function(){
+                              _this.toFab();
+                        })
+                  }
+                  child.addEventListener('keydown', function($event){
+                        if($event.keyCode === 13) child.dispatchEvent(new Event('click'));
+                  })
+
+
+            });
+            document.addEventListener('click', function($event){
+                  var path = $event.path || $event._path;
+                  if(~path.indexOf(_this)) return;
+                  var target = $event.target;
+                  if(target === document.body) return _this.toFab();
+
+                  do {
+                        if(target === _this) return false;
+                        target = target.parentNode;
+                  } while (target !== document.body);
+                  return _this.toFab();
+
+            })
+
+            var closeEl = this.querySelector('[close]');
+
+            if(closeEl) {
+                  closeEl.addEventListener('click', function() {
+                        _this.toFab();
+                  });
+            }
+      },
+
+      _setupGeometry: function(){
+            this.$.drawer.style.height = this.drawerHeight+'px';
+            this.$.drawer.style.width = this.drawerWidth+'px';
+            this.$.fab.style.height = this.fabDiameter+'px';
+            this.$.fab.style.width = this.fabDiameter+'px';
+            this.$.placeholder.style.height = (this.fabDiameter * this._fabScale)+'px';
+            this.$.placeholder.style.width = (this.fabDiameter * this._fabScale)+'px';
+      },
+
+      _setupOrientation: function(){
+
+            var _this = this;
+
+            this._fabTranslation = {x: 0, y: 0};
+
+            var splitted = this.orientation.split('-');
+
+            if(splitted.length > 2) return console.error(this.orientation+' is not valid, only two direction are allowed at max, eg: top-left');
+
+            splitted.forEach(function(direction){
+                  switch(direction){
+                        case 'top':
+                        _this.$.drawer.style.top = '-'+(_this.drawerHeight - _this.fabDiameter / 2)+'px';
+                        _this.$.placeholder.style.top = '100%';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px';
+                        _this._fabTranslation.y = _this.fabDiameter / 2 * -1;
+                        if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.left = '50%';
+                              _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
+                        }
+                        break;
+                        case 'bottom':
+                        _this.$.drawer.style.top = (_this.fabDiameter / 2)+'px';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.top = scaledDiameter+'px';
+                        _this.$.placeholder.style.marginTop = '-'+scaledDiameter+'px'
+                        _this._fabTranslation.y = _this.fabDiameter / 2;
+                        if(splitted.indexOf('right') === -1 && splitted.indexOf('left') === -1){
+                              _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.left = '50%';
+                              _this.$.placeholder.style.marginLeft = '-'+(scaledDiameter / 2)+'px';
+                        }
+                        break;
+                        case 'left':
+                        _this.$.drawer.style.left = '-'+(_this.drawerWidth - _this.fabDiameter / 2)+'px';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.left = '100%';
+                        _this.$.placeholder.style.marginLeft =  '-'+scaledDiameter+'px';
+                        _this._fabTranslation.x = _this.fabDiameter / 2 * -1;
+                        if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
+                        }
+                        break;
+                        case 'right':
+                        _this.$.drawer.style.left = (_this.fabDiameter / 2)+'px';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale;
+                        _this.$.placeholder.style.left = '0%';
+                        _this._fabTranslation.x = _this.fabDiameter / 2;
+                        if(splitted.indexOf('top') === -1 && splitted.indexOf('bottom') === -1){
+                              _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                              _this.$.placeholder.style.top = '50%';
+                              _this.$.placeholder.style.marginTop = '-'+(scaledDiameter / 2)+'px';
+                        }
+                        break;
+                        case 'center':
+                        _this.$.drawer.style.top = '-'+( (_this.drawerHeight - _this.fabDiameter) / 2)+'px';
+                        _this.$.drawer.style.left = '-'+( (_this.drawerWidth - _this.fabDiameter) / 2)+'px';
+                        _this.$.placeholder.style.top = '50%';
+                        _this.$.placeholder.style.left = '50%';
+                        var scaledDiameter = _this.fabDiameter * _this._fabScale / 2;
+                        _this.$.placeholder.style.margin = '-'+scaledDiameter+'px 0 0 -'+scaledDiameter+'px';
+                        break;
+                        default:
+                        console.error('Cannot process direction '+direction);
+                        break;
+                  }
+            })
+
+      },
+
+      _setAccessibility: function(){
+
+            var _this = this;
+
+            this.items.forEach(function(child, index){
+                  if(_this.state === _this._DRAWER_STATE){
+                        child.setAttribute('tabindex', 0);
+                  } else if (_this.state === _this._FAB_STATE) {
+                        child.setAttribute('tabindex', -1);
+                  }
+
+            });
+
+            if(_this.state === _this._DRAWER_STATE) {
+
+                  var firstFocus = this.querySelector('[first-focus]');
+                  if(firstFocus) {
+                        firstFocus.setAttribute('tabindex', 0);
+                        firstFocus.focus();
+                  }
+            }
+
+      },
+
+      toDrawer: function(){
+            var _this = this;
+            return new Promise(function(resolve, reject){
+                  if(_this.state === _this._ANIMATING_STATE || _this.state === _this._DRAWER_STATE) return reject(new Error('Cannot display drawer now'));
+                  _this.state = _this._ANIMATING_STATE;
+                  _this.fire('iron-activate', {from: _this._FAB_STATE, to: _this._DRAWER_STATE})
+                  _this.$.drawer.style.display = 'block';
+                  var placeholderBcr = _this.$.placeholder.getBoundingClientRect();
+                  var fabBcr = _this.$.fab.getBoundingClientRect();
+                  var drawerBcr = _this.$.drawer.getBoundingClientRect();
+                  var contentGroupEffect = _this._computeContentFadeInEffects(drawerBcr);
+
+                  requestAnimationFrame(function(){
+                        _this._translateInFab()
+                        .then(function(){
+                              _this._rippleIn(placeholderBcr, drawerBcr, fabBcr)
+                              .then(function(){
+                                    _this._fadeInContent(contentGroupEffect)
+                                    .then(function(){
+                                          _this.$.drawerContent.style.overflow = 'auto';
+                                          _this.state = _this._DRAWER_STATE;
+                                          _this._setAccessibility();
+                                          _this.fire('iron-state-changed', {state: _this.state})
+                                          return resolve();
+                                    })
+                              })
+                        })
+                  })
+            })
+
+      },
+
+      toFab: function(){
+            var _this = this;
+            return new Promise(function(resolve, reject){
+                  if(_this.state === _this._ANIMATING_STATE || _this.state === _this._FAB_STATE) return reject('Cannot display fab now');
+                  _this.state = _this._ANIMATING_STATE;
+                  _this.fire('iron-activate', {to: _this._FAB_STATE, from: _this._DRAWER_STATE})
+                  _this.$.drawerContent.style.overflow = 'hidden';
+                  _this._fadeOutContent()
+                  .then(function(){
+                        _this._contentEffects = null;
+                        _this.$.placeholder.style.display = 'block';
+                        _this.$.drawer.style.boxShadow = 'none';
+                        _this.$.drawer.style.backgroundColor = 'rgba(0,0,0,0)';
+                        requestAnimationFrame(function(){
+                              _this._rippleOut()
+                              .then(function(){
+                                    _this._rippleEffect = null;
+                                    _this._translateOutFab()
+                                    .then(function(){
+                                          _this._fabEffects = null;
+                                          _this.$.drawer.style.display = 'none';
+                                          _this.state = _this._FAB_STATE;
+                                          _this._setAccessibility();
+                                          _this.fire('iron-state-changed', {state: _this._state})
+                                          return resolve();
+                                    })
+                              })
+                        })
+                  })
+            })
+
+      },
+
+      _isChrome: function(){
+            // please note,
+            // that IE11 now returns undefined again for window.chrome
+            // and new Opera 30 outputs true for window.chrome
+            // and new IE Edge outputs to true now for window.chrome
+            // and if not iOS Chrome check
+            // so use the below updated condition
+            var isChromium = window.chrome,
+            winNav = window.navigator,
+            vendorName = winNav.vendor,
+            isOpera = winNav.userAgent.indexOf("OPR") > -1,
+            isIEedge = winNav.userAgent.indexOf("Edge") > -1,
+            isIOSChrome = winNav.userAgent.match("CriOS");
+
+            if(isIOSChrome){
+                  return true;
+            } else if(isChromium !== null && isChromium !== undefined && vendorName === "Google Inc." && isOpera == false && isIEedge == false) {
+                  return true;
+            } else {
+                  return false;
+            }
+      },
+
+      _computeContentFadeInEffects: function(drawerBcr){
+
+            var _this = this;
+            var childrenPerRow = null;
+            var childrenShareWidth = true;
+            var previousChildWidth = null;
+            var delay = 50;
+
+            var keyframe = [
+                  { opacity: 0, transform: 'translate('+(_this._fabTranslation.x * -1)+'px, '+(_this._fabTranslation.y * -1)+'px) scale(0.8)', offset: 0 },
+                  { transform: 'none', opacity: 1, offset: 1 }
+            ];
+            this._contentEffects = [];
+
+            var effects = [];
+            this.items.forEach(function(child){
+                  var width = child.width || child.style.width;
+                  if(previousChildWidth === null) previousChildWidth = width;
+                  else if(previousChildWidth !== width) childrenShareWidth = false;
+
+            });
+
+            if(childrenShareWidth) childrenPerRow = (drawerBcr.width - 20) / previousChildWidth;
+
+            this.items.forEach(function(child, index){
+
+                  child.style.opacity = '0';
+
+                  var settings = {
+                        duration: 200,
+                        easing: 'ease',
+                        delay: 0,
+                        iterations: 1,
+                        direction: 'normal',
+                        fill: 'forwards'
+                  };
+
+                  if(childrenPerRow !== null){
+                        var row = Math.ceil((index + 1)/childrenPerRow);
+                        var col = (index < childrenPerRow - 1) ? index : index - row;
+                        settings.delay = (row + col) * delay;
+                  }
+                  _this._contentEffects.push({effect: keyframe, settings: settings});
+                  effects.push(new KeyframeEffect(child, keyframe, settings));
+
+            });
+
+            return new GroupEffect(effects);
+
+      },
+
+      _fadeInContent: function(group){
+
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+
+                  var player = document.timeline.play(group);
+                  player.onfinish = function(){
+                        return resolve(player);
+                  }
+
+            });
+
+      },
+
+      _fadeOutContent: function(){
+
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+
+                  var effects = [];
+
+                  _this.items.forEach(function(child, index){
+
+                        effects.push(new KeyframeEffect(child, _this._reverse(_this._contentEffects[index].effect), _this._contentEffects[index].settings));
+
+                  });
+                  var player = document.timeline.play(new GroupEffect(effects));
+                  player.onfinish = resolve;
+
+            })
+
+      },
+
+      _translateInFab: function(){
+
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+
+                  var translateEffect = [
+                        { transform: 'none', offset: 0 },
+                        { transform: 'translate('+_this._fabTranslation.x+'px, '+_this._fabTranslation.y+'px) scale('+_this._fabScale+')', offset: 1 }
+                  ];
+                  var opacityEffect = [
+                        { opacity: 1, offset: 0 },
+                        { opacity: 0, offset: 1 }
+                  ];
+                  _this._fabEffects = {};
+                  _this._fabEffects.translate = translateEffect;
+                  _this._fabEffects.opacity = opacityEffect;
+
+                  var kEffects = [
+                        new KeyframeEffect(_this.$.fab, translateEffect, _this._fabAnimationSettings),
+                        new KeyframeEffect(_this.$.fab.$.icon, opacityEffect, _this._fabAnimationSettings)
+                  ];
+
+                  var group = new GroupEffect(kEffects);
+
+                  var player = document.timeline.play(group);
+                  player.onfinish = function(){
+                        _this.$.fab.style.opacity = 0;
+                        _this.$.placeholder.style.opacity = 1;
+                        return resolve();
+                  }
+
+            })
+      },
+
+      _rippleIn: function(placeholderBcr, drawerBcr, fabBcr){
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+                  var diameter = Math.max(drawerBcr.height, drawerBcr.width) * 1.3;
+                  var scaleRatio = diameter / fabBcr.width;
+                  var fabHalfWidth = fabBcr.width * _this._fabScale / 2;
+                  var translateX = ( (drawerBcr.left + drawerBcr.width / 2 - fabHalfWidth) - placeholderBcr.left ) / scaleRatio;
+                  var translateY = ( (drawerBcr.top + drawerBcr.height / 2 - fabHalfWidth) - placeholderBcr.top ) / scaleRatio;
+                  _this._rippleEffect = [
+                        { transform: 'none', offset: 0 },
+                        { transform: 'scale('+scaleRatio+') translate('+translateX+'px, '+translateY+'px)', offset: 1 }
+                  ];
+                  var player = _this.$.placeholder.animate(_this._rippleEffect, _this._drawerAnimationSettings);
+                  player.onfinish = function(){
+                        _this.$.drawer.style.boxShadow = '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)';
+                        _this.$.drawer.style.backgroundColor = _this.backgroundColor;
+                        _this.$.placeholder.style.display = 'none';
+                        return resolve();
+                  };
+
+            })
+      },
+
+      _rippleOut: function(){
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+                  var player = _this.$.placeholder.animate(_this._reverse(_this._rippleEffect), _this._drawerAnimationSettings);
+                  player.onfinish = function(){
+                        _this.$.placeholder.style.opacity = 0;
+                        _this.$.fab.style.opacity = 1;
+                        return resolve();
+                  }
+
+            })
+      },
+
+      _translateOutFab: function(){
+            var _this = this;
+
+            return new Promise(function(resolve, reject){
+                  var kEffects = [
+                        new KeyframeEffect(_this.$.fab, _this._reverse(_this._fabEffects.translate), _this._fabAnimationSettings),
+                        new KeyframeEffect(_this.$.fab.$.icon, _this._reverse(_this._fabEffects.opacity), _this._fabAnimationSettings)
+                  ];
+
+                  var group = new GroupEffect(kEffects);
+
+                  var player = document.timeline.play(group);
+
+                  player.onfinish = resolve;
+
+            })
+      },
+
+      _reverse: function(array) {
+            var buffer = [];
+            for(var i = 0; i < array.length; i++) {
+                  buffer[i] = array[array.length - 1 - i];
+                  buffer[i].offset = i;
+            }
+            return buffer;
+      }
+
+});
+</script>
+</dom-module>
