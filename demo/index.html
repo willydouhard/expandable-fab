@@ -18,9 +18,16 @@
             padding: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
             width: 100vw;
-            height: 100vh;
+            min-height: 100vh;
+      }
+
+      #container {
+          width: 80%;
+          min-height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
       }
 
       .item{
@@ -28,22 +35,84 @@
             height: 55px;
       }
 
-      expandable-fab {
-            --expandable-fab-background-color: #00BCD4;
+      #top_right {
+            --expandable-fab-background-color: #2196F3;
+      }
+
+      #center {
+          --expandable-fab-background-color: #3F51B5;
+      }
+
+      #top_left {
+          --expandable-fab-background-color: #673AB7;
+      }
+
+      #bottom_right {
+          --expandable-fab-background-color: #9C27B0;
+      }
+
+      #bottom_left {
+          --expandable-fab-background-color: #E91E63;
       }
 
       </style>
 </head>
 <body>
-      <template is="dom-bind">
-            <expandable-fab auto-close>
-                  <img first-focus class="item" src="icons/logo_docs_64px.png"/>
-                  <img class="item" src="icons/logo_forms_64px.png"/>
-                  <img class="item" src="icons/logo_gmail_64px.png"/>
-                  <img class="item" src="icons/logo_google_plus_64px.png"/>
-                  <img class="item" src="icons/logo_hangouts_64px.png"/>
-                  <img class="item" src="icons/logo_slides_64px.png"/>
-            </expandable-fab>
-      </template>
+    <div id="container">
+        <template is="dom-bind">
+              <expandable-fab id="top_right" orientation="top-right" auto-close>
+                    <img first-focus class="item" src="icons/logo_docs_64px.png"/>
+                    <img class="item" src="icons/logo_forms_64px.png"/>
+                    <img class="item" src="icons/logo_gmail_64px.png"/>
+                    <img class="item" src="icons/logo_google_plus_64px.png"/>
+                    <img class="item" src="icons/logo_hangouts_64px.png"/>
+                    <img class="item" src="icons/logo_slides_64px.png"/>
+              </expandable-fab>
+        </template>
+
+        <template is="dom-bind">
+              <expandable-fab id="center" orientation="center" auto-close>
+                    <img first-focus class="item" src="icons/logo_docs_64px.png"/>
+                    <img class="item" src="icons/logo_forms_64px.png"/>
+                    <img class="item" src="icons/logo_gmail_64px.png"/>
+                    <img class="item" src="icons/logo_google_plus_64px.png"/>
+                    <img class="item" src="icons/logo_hangouts_64px.png"/>
+                    <img class="item" src="icons/logo_slides_64px.png"/>
+              </expandable-fab>
+        </template>
+
+        <template is="dom-bind">
+              <expandable-fab id="top_left" orientation="top-left" auto-close>
+                    <img first-focus class="item" src="icons/logo_docs_64px.png"/>
+                    <img class="item" src="icons/logo_forms_64px.png"/>
+                    <img class="item" src="icons/logo_gmail_64px.png"/>
+                    <img class="item" src="icons/logo_google_plus_64px.png"/>
+                    <img class="item" src="icons/logo_hangouts_64px.png"/>
+                    <img class="item" src="icons/logo_slides_64px.png"/>
+              </expandable-fab>
+        </template>
+
+        <template is="dom-bind">
+              <expandable-fab id="bottom_right" orientation="bottom-right" auto-close>
+                    <img first-focus class="item" src="icons/logo_docs_64px.png"/>
+                    <img class="item" src="icons/logo_forms_64px.png"/>
+                    <img class="item" src="icons/logo_gmail_64px.png"/>
+                    <img class="item" src="icons/logo_google_plus_64px.png"/>
+                    <img class="item" src="icons/logo_hangouts_64px.png"/>
+                    <img class="item" src="icons/logo_slides_64px.png"/>
+              </expandable-fab>
+        </template>
+
+        <template is="dom-bind">
+              <expandable-fab id="bottom_left" orientation="bottom-left" auto-close>
+                    <img first-focus class="item" src="icons/logo_docs_64px.png"/>
+                    <img class="item" src="icons/logo_forms_64px.png"/>
+                    <img class="item" src="icons/logo_gmail_64px.png"/>
+                    <img class="item" src="icons/logo_google_plus_64px.png"/>
+                    <img class="item" src="icons/logo_hangouts_64px.png"/>
+                    <img class="item" src="icons/logo_slides_64px.png"/>
+              </expandable-fab>
+        </template>
+    </div>
 </body>
 </html>

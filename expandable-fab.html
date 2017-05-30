@@ -174,8 +174,7 @@ Polymer({
             },
 
             _fabTranslation: {
-                  type: Object,
-                  value: {x: 0, y: 0}
+                  type: Object
             },
 
             _DRAWER_STATE: {
@@ -304,6 +303,9 @@ Polymer({
       _setupOrientation: function(){
 
             var _this = this;
+
+            this._fabTranslation = {x: 0, y: 0};
+
             var splitted = this.orientation.split('-');
 
             if(splitted.length > 2) return console.error(this.orientation+' is not valid, only two direction are allowed at max, eg: top-left');
@@ -432,7 +434,7 @@ Polymer({
       toFab: function(){
             var _this = this;
             return new Promise(function(resolve, reject){
-                  if(_this.state === _this._ANIMATING_STATE || _this.state === _this._FAB_STATE) return reject(new Error('Cannot display fab now'));
+                  if(_this.state === _this._ANIMATING_STATE || _this.state === _this._FAB_STATE) return reject('Cannot display fab now');
                   _this.state = _this._ANIMATING_STATE;
                   _this.fire('iron-activate', {to: _this._FAB_STATE, from: _this._DRAWER_STATE})
                   _this.$.drawerContent.style.overflow = 'hidden';
